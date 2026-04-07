@@ -42,7 +42,7 @@ export function MosqueDisplay({
   onOpenSettings,
 }: MosqueDisplayProps) {
   return (
-    <div className="flex flex-col bg-[#FFEDD8] min-h-screen lg:h-screen lg:overflow-hidden">
+    <div className="flex flex-col bg-[#FFEDD8] min-h-screen lg:h-screen lg:overflow-hidden pb-[clamp(2.5rem,4vw,4rem)]">
       {/* Two-column layout */}
       <div className="flex flex-col lg:flex-row flex-1 min-h-0">
 
@@ -130,10 +130,6 @@ export function MosqueDisplay({
             ))}
           </div>
 
-          {/* Announcement ticker */}
-          <div className="w-full pt-[clamp(0.5rem,1vw,1rem)] mt-[clamp(0.75rem,1.5vw,2rem)] lg:mt-0">
-            <AnnouncementTicker announcements={settings.announcements} />
-          </div>
         </div>
 
         {/* Right column — prayer times (desktop only) */}
@@ -148,10 +144,13 @@ export function MosqueDisplay({
         </div>
       </div>
 
+      {/* Bottom banner — full width */}
+      <AnnouncementTicker announcements={settings.announcements} />
+
       {/* Settings button */}
       <button
         onClick={onOpenSettings}
-        className="fixed bottom-4 left-4 p-2 rounded-lg bg-[#3c3c3c]/8 hover:bg-[#3c3c3c]/15 text-[#3c3c3c]/40 hover:text-[#3c3c3c] transition-colors"
+        className="fixed bottom-[clamp(2.5rem,4vw,4rem)] left-4 p-2 rounded-lg bg-[#3c3c3c]/8 hover:bg-[#3c3c3c]/15 text-[#3c3c3c]/40 hover:text-[#3c3c3c] transition-colors z-50"
         title="Settings"
       >
         <svg
