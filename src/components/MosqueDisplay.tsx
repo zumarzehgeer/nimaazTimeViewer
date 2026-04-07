@@ -3,7 +3,8 @@ import { IconMapPin } from '@tabler/icons-react';
 import { PrayerColumn } from './PrayerColumn';
 import { AnnouncementTicker } from './AnnouncementTicker';
 import { Countdown } from './Countdown';
-import type { PrayerEntry, HijriDate, MosqueSettings, NextHijriHoliday } from '../types';
+import { HadithCard } from './HadithCard';
+import type { PrayerEntry, HijriDate, MosqueSettings, NextHijriHoliday, DailyHadith } from '../types';
 
 interface MosqueDisplayProps {
   now: Date;
@@ -12,6 +13,7 @@ interface MosqueDisplayProps {
   countdown: string;
   hijri: HijriDate | null;
   nextHoliday: NextHijriHoliday | null;
+  hadith: DailyHadith | null;
   settings: MosqueSettings;
   method: string | null;
   onOpenSettings: () => void;
@@ -24,6 +26,7 @@ export function MosqueDisplay({
   countdown,
   hijri,
   nextHoliday,
+  hadith,
   settings,
   method,
   onOpenSettings,
@@ -89,6 +92,13 @@ export function MosqueDisplay({
           <div className='w-full mt-[clamp(1rem,2vw,2.5rem)]'>
             <Countdown nextPrayer={nextPrayer} countdown={countdown} />
           </div>
+
+          {/* Daily hadith */}
+          {hadith && (
+            <div className='w-full mt-[clamp(0.75rem,1.5vw,2rem)]'>
+              <HadithCard hadith={hadith} />
+            </div>
+          )}
 
           {/* Announcement ticker — pushed to bottom */}
           <div className='w-full mt-auto pt-[clamp(1rem,2vw,2rem)]'>

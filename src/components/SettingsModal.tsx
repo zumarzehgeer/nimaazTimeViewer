@@ -266,6 +266,26 @@ export function SettingsModal({ settings, onSave, onClose }: SettingsModalProps)
             )}
           </div>
 
+          <hr className="border-gray-100 mb-5" />
+
+          {/* Daily Hadith */}
+          <div className="mb-6">
+            <span className="text-sm font-semibold text-gray-700 mb-2 block">Daily Hadith</span>
+            <input
+              type="password"
+              value={draft.hadithApiKey}
+              onChange={(e) => setDraft((d) => ({ ...d, hadithApiKey: e.target.value }))}
+              placeholder="Paste your API key..."
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              Get a free key at{' '}
+              <a href="https://hadithapi.com" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">
+                hadithapi.com ↗
+              </a>
+            </p>
+          </div>
+
           {/* Save */}
           <div className="flex gap-2">
             <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">

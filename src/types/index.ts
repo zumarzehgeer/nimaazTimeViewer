@@ -67,6 +67,13 @@ export interface IqamahOffsets {
   Isha: number
 }
 
+export interface DailyHadith {
+  number: string
+  english: string
+  arabic: string
+  chapter: string
+}
+
 export interface MosqueSettings {
   mosqueName: string
   location: LocationState | null
@@ -74,6 +81,7 @@ export interface MosqueSettings {
   jumuahAdhan: string
   announcements: string[]
   methodId: number | null
+  hadithApiKey: string
 }
 
 export interface CalculationMethod {
@@ -112,4 +120,5 @@ export const DEFAULT_SETTINGS: MosqueSettings = {
   jumuahAdhan: '',
   announcements: [],
   methodId: null,
+  hadithApiKey: '',
 }

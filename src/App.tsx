@@ -7,6 +7,7 @@ import { useCountdown } from './hooks/useCountdown';
 import { useClock } from './hooks/useClock';
 import { useSettings } from './hooks/useSettings';
 import { useNextHijriHoliday } from './hooks/useNextHijriHoliday';
+import { useHadith } from './hooks/useHadith';
 import { getTimeOfDay, BACKGROUNDS } from './hooks/useBackground';
 import type { PrayerEntry, LocationState, MosqueSettings } from './types';
 import { PRAYER_KEYS } from './types';
@@ -32,6 +33,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [date, setDate] = useState<Date>(() => new Date());
   const nextHoliday = useNextHijriHoliday();
+  const { hadith } = useHadith(settings.hadithApiKey || null, date);
 
   // Auto-advance date at midnight (check once per minute)
   useEffect(() => {
@@ -148,6 +150,7 @@ export default function App() {
         countdown={countdown}
         hijri={data?.hijri ?? null}
         nextHoliday={nextHoliday}
+        hadith={hadith}
         settings={settings}
         method={data?.method ?? null}
         onOpenSettings={() => setShowSettings(true)}
