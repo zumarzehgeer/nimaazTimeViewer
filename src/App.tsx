@@ -38,6 +38,7 @@ export default function App() {
     rotationIntervalMinutes: settings.hadith.rotationIntervalMinutes,
     enabledCollections: settings.hadith.enabledCollections,
     apiKey: settings.hadith.hadithApiKey,
+    pinnedHadith: settings.hadith.pinnedHadith,
   });
 
   // Auto-advance date at midnight (check once per minute)

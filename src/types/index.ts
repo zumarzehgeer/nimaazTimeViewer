@@ -111,11 +111,17 @@ export interface DisplayHadith {
   collection: HadithCollection
 }
 
+export interface PinnedHadith {
+  collection: HadithCollection
+  hadithNumber: number
+}
+
 export interface HadithSettings {
   enabled: boolean
   rotationIntervalMinutes: number
   enabledCollections: HadithCollection[]
   hadithApiKey: string
+  pinnedHadith: PinnedHadith | null
 }
 
 /** @deprecated use settings.hadith.* instead */
@@ -177,5 +183,6 @@ export const DEFAULT_SETTINGS: MosqueSettings = {
     rotationIntervalMinutes: 30,
     enabledCollections: ['sahih-bukhari', 'sahih-muslim', 'al-tirmidhi', 'abu-dawood', 'ibn-e-majah', 'sunan-nasai'],
     hadithApiKey: '',
+    pinnedHadith: null,
   },
 }

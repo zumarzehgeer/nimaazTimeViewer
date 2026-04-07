@@ -2,8 +2,9 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { IconCurrentLocation, IconLoader2 } from '@tabler/icons-react'
 import { searchCity, reverseGeocode } from '../services/geocoding'
 import { fetchMethods } from '../services/aladhan'
-import type { MosqueSettings, NominatimResult, LocationState, CalculationMethod, HadithCollection } from '../types'
-import { COLLECTION_LABELS } from '../types'
+import { fetchHadith } from '../services/hadith'
+import type { MosqueSettings, NominatimResult, LocationState, CalculationMethod, HadithCollection, DisplayHadith } from '../types'
+import { COLLECTION_LABELS, COLLECTION_COUNTS } from '../types'
 
 interface SettingsModalProps {
   settings: MosqueSettings
@@ -21,6 +22,53 @@ export function SettingsModal({ settings, onSave, onClose }: SettingsModalProps)
   const [methods, setMethods] = useState<CalculationMethod[]>([])
   const [loadingMethods, setLoadingMethods] = useState(true)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Pin-specific hadith state
+  const [pinCollection, setPinCollection] = useState<HadithCollection>(
+    settings.hadith.pinnedHadith?.collection ?? 'sahih-bukhari'
+  )
+  const [pinNumber, setPinNumber] = useState<string>(
+    settings.hadith.pinnedHadith?.hadithNumber?.toString() ?? '1'
+  )
+  const [pinPreview, setPinPreview] = useState<DisplayHadith | null>(null)
+  const [pinLoading, setPinLoading] = useState(false)
+  const [pinError, setPinError] = useState<string | null>(null)
+
+  const handleFetchPreview = async () => {
+    const n = parseInt(pinNumber)
+    const max = COLLECTION_COUNTS[pinCollection]
+    if (!n || n < 1 || n > max) {
+      setPinError(`Enter a number between 1 and ${max}`)
+      return
+    }
+    if (!draft.hadith.hadithApiKey) {
+      setPinError('API key required')
+      return
+    }
+    setPinError(null)
+    setPinLoading(true)
+    try {
+      const result = await fetchHadith(pinCollection, n, draft.hadith.hadithApiKey)
+      setPinPreview(result)
+    } catch {
+      setPinError('Failed to fetch — check number and API key')
+    } finally {
+      setPinLoading(false)
+    }
+  }
+
+  const handlePinSave = () => {
+    const n = parseInt(pinNumber)
+    if (!n || n < 1) return
+    setDraft((d) => ({ ...d, hadith: { ...d.hadith, pinnedHadith: { collection: pinCollection, hadithNumber: n } } }))
+    setPinPreview(null)
+  }
+
+  const handlePinClear = () => {
+    setDraft((d) => ({ ...d, hadith: { ...d.hadith, pinnedHadith: null } }))
+    setPinPreview(null)
+    setPinError(null)
+  }
 
   useEffect(() => {
     fetchMethods()
@@ -282,14 +330,8 @@ export function SettingsModal({ settings, onSave, onClose }: SettingsModalProps)
                     onChange={(e) => setDraft((d) => ({ ...d, hadith: { ...d.hadith, enabled: e.target.checked } }))}
                     className="sr-only"
                   />
-                  <div
-                    className={`w-10 h-5 rounded-full transition-colors ${draft.hadith.enabled ? 'bg-blue-600' : 'bg-gray-200'}`}
-                    onClick={() => setDraft((d) => ({ ...d, hadith: { ...d.hadith, enabled: !d.hadith.enabled } }))}
-                  />
-                  <div
-                    className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${draft.hadith.enabled ? 'translate-x-5' : ''}`}
-                    onClick={() => setDraft((d) => ({ ...d, hadith: { ...d.hadith, enabled: !d.hadith.enabled } }))}
-                  />
+                  <div className={`w-10 h-5 rounded-full transition-colors ${draft.hadith.enabled ? 'bg-blue-600' : 'bg-gray-200'}`} />
+                  <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${draft.hadith.enabled ? 'translate-x-5' : ''}`} />
                 </div>
               </label>
             </div>
@@ -325,6 +367,63 @@ export function SettingsModal({ settings, onSave, onClose }: SettingsModalProps)
                     <option value={45}>Every 45 minutes</option>
                     <option value={60}>Every hour</option>
                   </select>
+                </div>
+
+                <div className="mb-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-medium text-gray-600">Pin specific hadith</span>
+                    {draft.hadith.pinnedHadith && (
+                      <button onClick={handlePinClear} className="text-xs text-red-400 hover:text-red-600">
+                        Clear pin
+                      </button>
+                    )}
+                  </div>
+                  {draft.hadith.pinnedHadith && (
+                    <p className="text-xs text-[#11999e] mb-2">
+                      Pinned: {COLLECTION_LABELS[draft.hadith.pinnedHadith.collection]} #{draft.hadith.pinnedHadith.hadithNumber}
+                    </p>
+                  )}
+                  <div className="flex gap-2 mb-2">
+                    <select
+                      value={pinCollection}
+                      onChange={(e) => { setPinCollection(e.target.value as HadithCollection); setPinPreview(null); setPinError(null) }}
+                      className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {(Object.entries(COLLECTION_LABELS) as [HadithCollection, string][]).map(([key, label]) => (
+                        <option key={key} value={key}>{label}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      min={1}
+                      max={COLLECTION_COUNTS[pinCollection]}
+                      value={pinNumber}
+                      onChange={(e) => { setPinNumber(e.target.value); setPinPreview(null); setPinError(null) }}
+                      placeholder="#"
+                      className="w-20 px-2 py-1.5 border border-gray-200 rounded-lg text-xs text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      onClick={handleFetchPreview}
+                      disabled={pinLoading}
+                      className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs rounded-lg disabled:opacity-50 whitespace-nowrap"
+                    >
+                      {pinLoading ? '...' : 'Preview'}
+                    </button>
+                  </div>
+                  {pinError && <p className="text-xs text-red-400 mb-2">{pinError}</p>}
+                  {pinPreview && (
+                    <div className="bg-gray-50 rounded-lg p-2.5 mb-2 border border-gray-100">
+                      <p className="text-xs text-[#11999e] font-medium mb-1">{pinPreview.source} #{pinPreview.number}</p>
+                      <p className="text-xs text-gray-600 line-clamp-3">{pinPreview.english}</p>
+                      <button
+                        onClick={handlePinSave}
+                        className="mt-2 px-3 py-1 bg-[#11999e] text-white text-xs rounded-lg hover:bg-[#11999e]/80"
+                      >
+                        Pin this hadith
+                      </button>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-400">When pinned, rotation is paused and this hadith always shows.</p>
                 </div>
 
                 <div>

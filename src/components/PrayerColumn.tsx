@@ -54,14 +54,14 @@ export function PrayerColumn({ prayer, isNext }: PrayerColumnProps) {
       `}
     >
       {/* Icon */}
-      <div className='w-[clamp(1rem,2vw,3rem)] flex justify-center flex-shrink-0'>
+      <div className='w-[clamp(1.25rem,2vw,2.5rem)] flex justify-center flex-shrink-0'>
         {(() => {
           const Icon = ICONS[prayer.key];
           return Icon ? (
             <Icon
-              size='clamp(1.5rem,2.5vw,3rem)'
+              size={20}
               strokeWidth={1.5}
-              className={isNext ? 'text-white' : 'text-[#11999e]'}
+              className={`w-[clamp(1rem,1.8vw,1.8rem)] h-[clamp(1rem,1.8vw,1.8rem)] ${isNext ? 'text-white' : 'text-[#11999e]'}`}
             />
           ) : null;
         })()}

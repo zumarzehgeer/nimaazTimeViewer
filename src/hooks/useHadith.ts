@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import type { DisplayHadith, HadithCollection } from '../types'
+import type { DisplayHadith, HadithCollection, PinnedHadith } from '../types'
 import { getRotationSlot, pickHadithTarget, fetchHadith } from '../services/hadith'
 
 interface UseHadithOptions {
@@ -7,6 +7,7 @@ interface UseHadithOptions {
   rotationIntervalMinutes: number
   enabledCollections: HadithCollection[]
   apiKey: string
+  pinnedHadith: PinnedHadith | null
 }
 
 interface UseHadithReturn {
@@ -16,7 +17,7 @@ interface UseHadithReturn {
 }
 
 export function useHadith(options: UseHadithOptions): UseHadithReturn {
-  const { enabled, rotationIntervalMinutes, enabledCollections, apiKey } = options
+  const { enabled, rotationIntervalMinutes, enabledCollections, apiKey, pinnedHadith } = options
 
   const [hadith, setHadith] = useState<DisplayHadith | null>(null)
   const [loading, setLoading] = useState(false)
@@ -24,20 +25,19 @@ export function useHadith(options: UseHadithOptions): UseHadithReturn {
   const lastSlotRef = useRef<number>(-1)
   const collectionsKey = [...enabledCollections].sort().join(',')
 
+  const apply = useCallback((next: DisplayHadith) => {
+    setIsTransitioning(true)
+    setTimeout(() => {
+      setHadith(next)
+      setIsTransitioning(false)
+    }, 300)
+  }, [])
+
   const loadHadith = useCallback(
-    async (now: Date) => {
+    async (collection: HadithCollection, hadithNumber: number) => {
       if (!apiKey) return
-      const { collection, hadithNumber } = pickHadithTarget(now, getRotationSlot(now, rotationIntervalMinutes), enabledCollections)
       const cacheKey = `hadith-${collection}-${hadithNumber}`
       const cached = sessionStorage.getItem(cacheKey)
-
-      const apply = (next: DisplayHadith) => {
-        setIsTransitioning(true)
-        setTimeout(() => {
-          setHadith(next)
-          setIsTransitioning(false)
-        }, 300)
-      }
 
       if (cached) {
         try {
@@ -58,31 +58,46 @@ export function useHadith(options: UseHadithOptions): UseHadithReturn {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [rotationIntervalMinutes, collectionsKey, apiKey],
+    [apiKey, apply],
   )
 
+  // Pinned hadith — load once when pin changes
+  const pinnedKey = pinnedHadith ? `${pinnedHadith.collection}-${pinnedHadith.hadithNumber}` : null
   useEffect(() => {
-    if (!enabled) {
-      setHadith(null)
-      lastSlotRef.current = -1
-      return
-    }
+    if (!enabled || !pinnedHadith) return
+    loadHadith(pinnedHadith.collection, pinnedHadith.hadithNumber)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, pinnedKey, loadHadith])
+
+  // Rotating hadith — only active when no pin
+  useEffect(() => {
+    if (!enabled || pinnedHadith) return
 
     const now = new Date()
     lastSlotRef.current = getRotationSlot(now, rotationIntervalMinutes)
-    loadHadith(now)
+    const { collection, hadithNumber } = pickHadithTarget(now, lastSlotRef.current, enabledCollections)
+    loadHadith(collection, hadithNumber)
 
     const id = setInterval(() => {
       const current = new Date()
       const slot = getRotationSlot(current, rotationIntervalMinutes)
       if (slot !== lastSlotRef.current) {
         lastSlotRef.current = slot
-        loadHadith(current)
+        const { collection: c, hadithNumber: n } = pickHadithTarget(current, slot, enabledCollections)
+        loadHadith(c, n)
       }
     }, 60_000)
 
     return () => clearInterval(id)
-  }, [enabled, loadHadith, rotationIntervalMinutes])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, pinnedHadith, rotationIntervalMinutes, collectionsKey, loadHadith])
+
+  useEffect(() => {
+    if (!enabled) {
+      setHadith(null)
+      lastSlotRef.current = -1
+    }
+  }, [enabled])
 
   return { hadith, loading, isTransitioning }
 }
