@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import type { PrayerEntry } from '../types'
 
 interface CountdownResult {
@@ -24,13 +23,7 @@ function formatCountdown(ms: number): string {
   return [h, m, s].map((v) => String(v).padStart(2, '0')).join(':')
 }
 
-export function useCountdown(prayers: PrayerEntry[], date: Date): CountdownResult {
-  const [now, setNow] = useState(() => new Date())
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000)
-    return () => clearInterval(id)
-  }, [])
+export function useCountdown(prayers: PrayerEntry[], date: Date, now: Date): CountdownResult {
 
   if (prayers.length === 0) return { nextPrayer: null, countdown: '00:00:00' }
 

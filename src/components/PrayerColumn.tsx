@@ -1,5 +1,4 @@
 import {
-  IconMoonOff,
   IconSunrise,
   IconSunLow,
   IconSun,
@@ -8,17 +7,18 @@ import {
   IconMoon,
   IconMoonStars,
   IconStars,
+  IconBuildingMosque,
   type Icon,
 } from '@tabler/icons-react';
 import type { PrayerEntry } from '../types';
 
-const NO_ADHAN_KEYS = new Set(['Imsak', 'Sunrise', 'Midnight', 'Lastthird']);
+const NO_ADHAN_KEYS = new Set(['Sunrise', 'Midnight', 'Lastthird']);
 
 const ICONS: Record<string, Icon> = {
-  Imsak: IconMoonOff,
   Fajr: IconSunrise,
   Sunrise: IconSunLow,
   Dhuhr: IconSun,
+  Jumuah: IconBuildingMosque,
   Asr: IconSunHigh,
   Maghrib: IconSunset,
   Isha: IconMoon,
@@ -29,7 +29,6 @@ const ICONS: Record<string, Icon> = {
 interface PrayerColumnProps {
   prayer: PrayerEntry;
   isNext: boolean;
-  isPast: boolean;
 }
 
 function to12Hour(timeStr: string): string {
@@ -102,7 +101,8 @@ export function PrayerColumn({ prayer, isNext }: PrayerColumnProps) {
               Iqamah
             </p>
             <p
-              className={`text-[clamp(1rem,1.8vw,2rem)] font-semibold tabular-nums ${isNext ? 'text-[#6decb9]' : 'text-[#11999e]'}`}
+              className={`text-[clamp(1rem,1.8vw,2rem)] font-semibold ${isNext ? 'text-[#6decb9]' : 'text-[#11999e]'}`}
+              style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
               {to12Hour(prayer.iqamahTime)}
             </p>

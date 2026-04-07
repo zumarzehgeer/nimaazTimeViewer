@@ -1,7 +1,8 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { IconCurrentLocation, IconLoader2 } from '@tabler/icons-react'
 import { searchCity, reverseGeocode } from '../services/geocoding'
-import type { MosqueSettings, NominatimResult, LocationState } from '../types'
+import { fetchMethods } from '../services/aladhan'
+import type { MosqueSettings, NominatimResult, LocationState, CalculationMethod } from '../types'
 
 interface SettingsModalProps {
   settings: MosqueSettings
@@ -16,7 +17,18 @@ export function SettingsModal({ settings, onSave, onClose }: SettingsModalProps)
   const [searching, setSearching] = useState(false)
   const [announcementInput, setAnnouncementInput] = useState('')
   const [detecting, setDetecting] = useState(false)
+  const [methods, setMethods] = useState<CalculationMethod[]>([])
+  const [loadingMethods, setLoadingMethods] = useState(true)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    fetchMethods()
+      .then(setMethods)
+      .catch(() => { /* silently ignore — dropdown stays empty */ })
+      .finally(() => setLoadingMethods(false))
+  }, [])
+
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current) }, [])
 
   const handleCityInput = useCallback((value: string) => {
     setCityQuery(value)
@@ -140,7 +152,7 @@ export function SettingsModal({ settings, onSave, onClose }: SettingsModalProps)
             {cityResults.length > 0 && (
               <ul className="mt-1 border border-gray-200 rounded-lg overflow-hidden">
                 {cityResults.map((r) => (
-                  <li key={r.place_id} onClick={() => handleCitySelect(r)} className="px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer truncate">
+                  <li key={r.place_id} onMouseDown={() => handleCitySelect(r)} className="px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer truncate">
                     {r.display_name}
                   </li>
                 ))}
@@ -151,6 +163,25 @@ export function SettingsModal({ settings, onSave, onClose }: SettingsModalProps)
                 {draft.location.label} ({draft.location.lat.toFixed(4)}, {draft.location.lng.toFixed(4)})
               </p>
             )}
+          </div>
+
+          <hr className="border-gray-100 mb-5" />
+
+          {/* Calculation Method */}
+          <div className="mb-5">
+            <span className="text-sm font-semibold text-gray-700 mb-2 block">Calculation Method</span>
+            <select
+              value={draft.methodId ?? ''}
+              onChange={(e) => setDraft((d) => ({ ...d, methodId: e.target.value === '' ? null : parseInt(e.target.value) }))}
+              disabled={loadingMethods}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              <option value="">Auto (recommended)</option>
+              {methods.map((m) => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
+            </select>
+            {loadingMethods && <p className="mt-1 text-xs text-gray-400">Loading methods...</p>}
           </div>
 
           <hr className="border-gray-100 mb-5" />
@@ -173,6 +204,37 @@ export function SettingsModal({ settings, onSave, onClose }: SettingsModalProps)
                   <span className="text-xs text-gray-400">min</span>
                 </label>
               ))}
+            </div>
+          </div>
+
+          <hr className="border-gray-100 mb-5" />
+
+          {/* Jumu'ah */}
+          <div className="mb-5">
+            <span className="text-sm font-semibold text-gray-700 mb-2 block">Jumu'ah</span>
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 w-24">Adhan time</span>
+                <input
+                  type="time"
+                  value={draft.jumuahAdhan}
+                  onChange={(e) => setDraft((d) => ({ ...d, jumuahAdhan: e.target.value }))}
+                  className="px-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {!draft.jumuahAdhan && <span className="text-xs text-gray-400">defaults to Dhuhr</span>}
+              </label>
+              <label className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 w-24">Iqamah after</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={60}
+                  value={draft.iqamahOffsets.Jumuah}
+                  onChange={(e) => updateIqamah('Jumuah', parseInt(e.target.value) || 0)}
+                  className="w-16 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-xs text-gray-400">min</span>
+              </label>
             </div>
           </div>
 

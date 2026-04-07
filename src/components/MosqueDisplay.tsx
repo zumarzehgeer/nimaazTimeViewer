@@ -3,7 +3,7 @@ import { IconMapPin } from '@tabler/icons-react';
 import { PrayerColumn } from './PrayerColumn';
 import { AnnouncementTicker } from './AnnouncementTicker';
 import { Countdown } from './Countdown';
-import type { PrayerEntry, HijriDate, MosqueSettings } from '../types';
+import type { PrayerEntry, HijriDate, MosqueSettings, NextHijriHoliday } from '../types';
 
 interface MosqueDisplayProps {
   now: Date;
@@ -11,6 +11,7 @@ interface MosqueDisplayProps {
   nextPrayer: PrayerEntry | null;
   countdown: string;
   hijri: HijriDate | null;
+  nextHoliday: NextHijriHoliday | null;
   settings: MosqueSettings;
   method: string | null;
   onOpenSettings: () => void;
@@ -22,6 +23,7 @@ export function MosqueDisplay({
   nextPrayer,
   countdown,
   hijri,
+  nextHoliday,
   settings,
   method,
   onOpenSettings,
@@ -36,6 +38,11 @@ export function MosqueDisplay({
           <div className='flex justify-between gap-4 items-center'>
             {/* Dates */}
             <div>
+              {settings.mosqueName && (
+                <p className='text-[clamp(1rem,1.4vw,1.8rem)] font-bold text-[#3c3c3c] leading-tight mb-0.5'>
+                  {settings.mosqueName}
+                </p>
+              )}
               {settings.location && (
                 <p className='text-[clamp(0.7rem,0.9vw,1rem)] text-[#11999e] mb-1 flex items-center gap-0.5'>
                   <IconMapPin size={12} strokeWidth={2} />
@@ -48,6 +55,13 @@ export function MosqueDisplay({
               {hijri && (
                 <p className='text-[clamp(0.8rem,1vw,1.2rem)] text-[#11999e] font-medium mt-0.5'>
                   {hijri.day} {hijri.month.en} {hijri.year} AH
+                </p>
+              )}
+              {nextHoliday && nextHoliday.daysUntil >= 0 && (
+                <p className='text-[clamp(0.65rem,0.85vw,0.9rem)] text-[#11999e]/70 font-medium mt-0.5'>
+                  {nextHoliday.daysUntil === 0
+                    ? `✦ ${nextHoliday.name} — Today!`
+                    : `✦ ${nextHoliday.name} in ${nextHoliday.daysUntil} day${nextHoliday.daysUntil !== 1 ? 's' : ''}`}
                 </p>
               )}
               {method && (
@@ -85,7 +99,7 @@ export function MosqueDisplay({
         {/* Right column — prayer times */}
         <div className='w-full lg:w-[45%] flex flex-col justify-center gap-[clamp(0.35rem,1vw,1rem)] px-[clamp(1rem,2vw,3rem)] py-[clamp(1rem,2vw,2rem)]'>
           {prayers.map((prayer) => (
-            <PrayerColumn key={prayer.key} prayer={prayer} isNext={prayer.key === nextPrayer?.key} isPast={false} />
+            <PrayerColumn key={prayer.key} prayer={prayer} isNext={prayer.key === nextPrayer?.key} />
           ))}
         </div>
       </div>

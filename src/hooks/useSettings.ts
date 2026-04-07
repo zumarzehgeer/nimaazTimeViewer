@@ -7,7 +7,14 @@ const STORAGE_KEY = 'nimaaz-settings'
 function loadSettings(): MosqueSettings {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) }
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      return {
+        ...DEFAULT_SETTINGS,
+        ...parsed,
+        iqamahOffsets: { ...DEFAULT_SETTINGS.iqamahOffsets, ...parsed.iqamahOffsets },
+      }
+    }
   } catch { /* ignore */ }
   return DEFAULT_SETTINGS
 }

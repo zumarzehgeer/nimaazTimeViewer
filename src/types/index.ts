@@ -61,6 +61,7 @@ export interface PrayerEntry {
 export interface IqamahOffsets {
   Fajr: number
   Dhuhr: number
+  Jumuah: number
   Asr: number
   Maghrib: number
   Isha: number
@@ -70,7 +71,19 @@ export interface MosqueSettings {
   mosqueName: string
   location: LocationState | null
   iqamahOffsets: IqamahOffsets
+  jumuahAdhan: string
   announcements: string[]
+  methodId: number | null
+}
+
+export interface CalculationMethod {
+  id: number
+  name: string
+}
+
+export interface NextHijriHoliday {
+  name: string
+  daysUntil: number
 }
 
 export const PRAYER_KEYS = [
@@ -91,9 +104,12 @@ export const DEFAULT_SETTINGS: MosqueSettings = {
   iqamahOffsets: {
     Fajr: 20,
     Dhuhr: 15,
+    Jumuah: 30,
     Asr: 15,
     Maghrib: 5,
     Isha: 15,
   },
+  jumuahAdhan: '',
   announcements: [],
+  methodId: null,
 }

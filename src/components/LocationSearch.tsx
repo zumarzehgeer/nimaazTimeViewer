@@ -66,6 +66,8 @@ export function LocationSearch({ onSelect }: LocationSearchProps) {
     )
   }
 
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current) }, [])
+
   // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
