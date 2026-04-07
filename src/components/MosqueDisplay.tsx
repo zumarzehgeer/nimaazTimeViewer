@@ -47,10 +47,10 @@ export function MosqueDisplay({
       <div className="flex flex-col lg:flex-row flex-1 min-h-0">
 
         {/* Left column — info panel */}
-        <div className="w-full lg:w-[55%] flex flex-col justify-between px-[clamp(1rem,3vw,3rem)] py-[clamp(1rem,2vw,2rem)]">
+        <div className="w-full lg:w-[55%] flex flex-col px-[clamp(1rem,3vw,3rem)] py-[clamp(1rem,2vw,2rem)] min-h-0">
 
           {/* Top section: dates + clock/countdown */}
-          <div>
+          <div className="flex flex-col min-h-0 flex-1">
             {/* Dates row */}
             <div className="flex justify-between gap-4 items-center">
               {/* Dates */}
@@ -109,7 +109,7 @@ export function MosqueDisplay({
 
             {/* Daily hadith */}
             {settings.hadith.enabled && (
-              <div className="w-full mt-[clamp(0.75rem,1.5vw,2rem)]">
+              <div className="w-full mt-[clamp(0.75rem,1.5vw,2rem)] flex-1 h-0">
                 <HadithCard
                   hadith={hadith}
                   loading={hadithLoading}
