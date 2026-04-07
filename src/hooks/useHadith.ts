@@ -1,49 +1,88 @@
-import { useState, useEffect } from 'react'
-import { format } from 'date-fns'
-import { fetchHadith } from '../services/hadith'
-import type { DailyHadith } from '../types'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import type { DisplayHadith, HadithCollection } from '../types'
+import { getRotationSlot, pickHadithTarget, fetchHadith } from '../services/hadith'
 
-const BUKHARI_COUNT = 7563
+interface UseHadithOptions {
+  enabled: boolean
+  rotationIntervalMinutes: number
+  enabledCollections: HadithCollection[]
+  apiKey: string
+}
 
-export function useHadith(apiKey: string | null, date: Date): { hadith: DailyHadith | null; loading: boolean } {
-  const [hadith, setHadith] = useState<DailyHadith | null>(null)
+interface UseHadithReturn {
+  hadith: DisplayHadith | null
+  loading: boolean
+  isTransitioning: boolean
+}
+
+export function useHadith(options: UseHadithOptions): UseHadithReturn {
+  const { enabled, rotationIntervalMinutes, enabledCollections, apiKey } = options
+
+  const [hadith, setHadith] = useState<DisplayHadith | null>(null)
   const [loading, setLoading] = useState(false)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const lastSlotRef = useRef<number>(-1)
+  const collectionsKey = [...enabledCollections].sort().join(',')
 
-  const dateKey = format(date, 'yyyy-MM-dd')
+  const loadHadith = useCallback(
+    async (now: Date) => {
+      if (!apiKey) return
+      const { collection, hadithNumber } = pickHadithTarget(now, getRotationSlot(now, rotationIntervalMinutes), enabledCollections)
+      const cacheKey = `hadith-${collection}-${hadithNumber}`
+      const cached = sessionStorage.getItem(cacheKey)
+
+      const apply = (next: DisplayHadith) => {
+        setIsTransitioning(true)
+        setTimeout(() => {
+          setHadith(next)
+          setIsTransitioning(false)
+        }, 300)
+      }
+
+      if (cached) {
+        try {
+          apply(JSON.parse(cached))
+          return
+        } catch { /* re-fetch */ }
+      }
+
+      setLoading(true)
+      try {
+        const result = await fetchHadith(collection, hadithNumber, apiKey)
+        if (result.english) {
+          sessionStorage.setItem(cacheKey, JSON.stringify(result))
+          apply(result)
+        }
+      } catch { /* fail silently */ } finally {
+        setLoading(false)
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rotationIntervalMinutes, collectionsKey, apiKey],
+  )
 
   useEffect(() => {
-    if (!apiKey) {
+    if (!enabled) {
       setHadith(null)
+      lastSlotRef.current = -1
       return
     }
 
-    const cacheKey = `hadith-${dateKey}`
+    const now = new Date()
+    lastSlotRef.current = getRotationSlot(now, rotationIntervalMinutes)
+    loadHadith(now)
 
-    const cached = sessionStorage.getItem(cacheKey)
-    if (cached) {
-      try {
-        setHadith(JSON.parse(cached))
-        return
-      } catch { /* ignore, re-fetch */ }
-    }
+    const id = setInterval(() => {
+      const current = new Date()
+      const slot = getRotationSlot(current, rotationIntervalMinutes)
+      if (slot !== lastSlotRef.current) {
+        lastSlotRef.current = slot
+        loadHadith(current)
+      }
+    }, 60_000)
 
-    const hadithNumber = (Math.floor(new Date(dateKey).getTime() / 86400000) % BUKHARI_COUNT) + 1
-    let cancelled = false
+    return () => clearInterval(id)
+  }, [enabled, loadHadith, rotationIntervalMinutes])
 
-    setLoading(true)
-    fetchHadith(apiKey, hadithNumber)
-      .then((result) => {
-        if (cancelled) return
-        if (result.english) {
-          sessionStorage.setItem(cacheKey, JSON.stringify(result))
-          setHadith(result)
-        }
-      })
-      .catch(() => { /* fail silently */ })
-      .finally(() => { if (!cancelled) setLoading(false) })
-
-    return () => { cancelled = true }
-  }, [apiKey, dateKey])
-
-  return { hadith, loading }
+  return { hadith, loading, isTransitioning }
 }

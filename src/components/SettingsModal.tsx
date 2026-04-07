@@ -2,7 +2,8 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { IconCurrentLocation, IconLoader2 } from '@tabler/icons-react'
 import { searchCity, reverseGeocode } from '../services/geocoding'
 import { fetchMethods } from '../services/aladhan'
-import type { MosqueSettings, NominatimResult, LocationState, CalculationMethod } from '../types'
+import type { MosqueSettings, NominatimResult, LocationState, CalculationMethod, HadithCollection } from '../types'
+import { COLLECTION_LABELS } from '../types'
 
 interface SettingsModalProps {
   settings: MosqueSettings
@@ -270,20 +271,87 @@ export function SettingsModal({ settings, onSave, onClose }: SettingsModalProps)
 
           {/* Daily Hadith */}
           <div className="mb-6">
-            <span className="text-sm font-semibold text-gray-700 mb-2 block">Daily Hadith</span>
-            <input
-              type="password"
-              value={draft.hadithApiKey}
-              onChange={(e) => setDraft((d) => ({ ...d, hadithApiKey: e.target.value }))}
-              placeholder="Paste your API key..."
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="mt-1 text-xs text-gray-400">
-              Get a free key at{' '}
-              <a href="https://hadithapi.com" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">
-                hadithapi.com ↗
-              </a>
-            </p>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-semibold text-gray-700">Daily Hadith</span>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span className="text-xs text-gray-500">{draft.hadith.enabled ? 'On' : 'Off'}</span>
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={draft.hadith.enabled}
+                    onChange={(e) => setDraft((d) => ({ ...d, hadith: { ...d.hadith, enabled: e.target.checked } }))}
+                    className="sr-only"
+                  />
+                  <div
+                    className={`w-10 h-5 rounded-full transition-colors ${draft.hadith.enabled ? 'bg-blue-600' : 'bg-gray-200'}`}
+                    onClick={() => setDraft((d) => ({ ...d, hadith: { ...d.hadith, enabled: !d.hadith.enabled } }))}
+                  />
+                  <div
+                    className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${draft.hadith.enabled ? 'translate-x-5' : ''}`}
+                    onClick={() => setDraft((d) => ({ ...d, hadith: { ...d.hadith, enabled: !d.hadith.enabled } }))}
+                  />
+                </div>
+              </label>
+            </div>
+
+            {draft.hadith.enabled && (
+              <>
+                <div className="mb-3">
+                  <span className="text-xs font-medium text-gray-600 mb-1.5 block">API Key</span>
+                  <input
+                    type="password"
+                    value={draft.hadith.hadithApiKey}
+                    onChange={(e) => setDraft((d) => ({ ...d, hadith: { ...d.hadith, hadithApiKey: e.target.value } }))}
+                    placeholder="Paste your hadithapi.com key..."
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="mt-1 text-xs text-gray-400">
+                    Free key at{' '}
+                    <a href="https://hadithapi.com" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">
+                      hadithapi.com ↗
+                    </a>
+                  </p>
+                </div>
+
+                <div className="mb-3">
+                  <span className="text-xs font-medium text-gray-600 mb-1.5 block">Rotation interval</span>
+                  <select
+                    value={draft.hadith.rotationIntervalMinutes}
+                    onChange={(e) => setDraft((d) => ({ ...d, hadith: { ...d.hadith, rotationIntervalMinutes: parseInt(e.target.value) } }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value={15}>Every 15 minutes</option>
+                    <option value={30}>Every 30 minutes</option>
+                    <option value={45}>Every 45 minutes</option>
+                    <option value={60}>Every hour</option>
+                  </select>
+                </div>
+
+                <div>
+                  <span className="text-xs font-medium text-gray-600 mb-1.5 block">Collections</span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {(Object.entries(COLLECTION_LABELS) as [HadithCollection, string][]).map(([key, label]) => (
+                      <label key={key} className="flex items-center gap-2 cursor-pointer text-sm text-gray-600 py-1">
+                        <input
+                          type="checkbox"
+                          checked={draft.hadith.enabledCollections.includes(key)}
+                          onChange={(e) => {
+                            const next = e.target.checked
+                              ? [...draft.hadith.enabledCollections, key]
+                              : draft.hadith.enabledCollections.filter((c) => c !== key)
+                            // Keep at least one collection enabled
+                            if (next.length === 0) return
+                            setDraft((d) => ({ ...d, hadith: { ...d.hadith, enabledCollections: next } }))
+                          }}
+                          className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600"
+                        />
+                        <span className="truncate">{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Save */}

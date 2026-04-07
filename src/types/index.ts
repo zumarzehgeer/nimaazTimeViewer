@@ -67,6 +67,58 @@ export interface IqamahOffsets {
   Isha: number
 }
 
+export type HadithCollection =
+  | 'sahih-bukhari'
+  | 'sahih-muslim'
+  | 'al-tirmidhi'
+  | 'abu-dawood'
+  | 'ibn-e-majah'
+  | 'sunan-nasai'
+  | 'mishkat'
+  | 'musnad-ahmad'
+  | 'al-silsila-sahiha'
+
+export const COLLECTION_LABELS: Record<HadithCollection, string> = {
+  'sahih-bukhari': 'Sahih Bukhari',
+  'sahih-muslim': 'Sahih Muslim',
+  'al-tirmidhi': "Jami' al-Tirmidhi",
+  'abu-dawood': 'Sunan Abu Dawood',
+  'ibn-e-majah': 'Sunan Ibn Majah',
+  'sunan-nasai': "Sunan an-Nasa'i",
+  'mishkat': 'Mishkat al-Masabih',
+  'musnad-ahmad': 'Musnad Ahmad',
+  'al-silsila-sahiha': 'Al-Silsila al-Sahiha',
+}
+
+export const COLLECTION_COUNTS: Record<HadithCollection, number> = {
+  'sahih-bukhari': 7563,
+  'sahih-muslim': 7453,
+  'al-tirmidhi': 3956,
+  'abu-dawood': 5274,
+  'ibn-e-majah': 4342,
+  'sunan-nasai': 5761,
+  'mishkat': 6294,
+  'musnad-ahmad': 4305,
+  'al-silsila-sahiha': 4358,
+}
+
+export interface DisplayHadith {
+  number: string
+  english: string
+  arabic: string
+  chapter: string
+  source: string
+  collection: HadithCollection
+}
+
+export interface HadithSettings {
+  enabled: boolean
+  rotationIntervalMinutes: number
+  enabledCollections: HadithCollection[]
+  hadithApiKey: string
+}
+
+/** @deprecated use settings.hadith.* instead */
 export interface DailyHadith {
   number: string
   english: string
@@ -81,7 +133,7 @@ export interface MosqueSettings {
   jumuahAdhan: string
   announcements: string[]
   methodId: number | null
-  hadithApiKey: string
+  hadith: HadithSettings
 }
 
 export interface CalculationMethod {
@@ -120,5 +172,10 @@ export const DEFAULT_SETTINGS: MosqueSettings = {
   jumuahAdhan: '',
   announcements: [],
   methodId: null,
-  hadithApiKey: '',
+  hadith: {
+    enabled: true,
+    rotationIntervalMinutes: 30,
+    enabledCollections: ['sahih-bukhari', 'sahih-muslim', 'al-tirmidhi', 'abu-dawood', 'ibn-e-majah', 'sunan-nasai'],
+    hadithApiKey: '',
+  },
 }

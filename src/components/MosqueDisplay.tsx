@@ -4,7 +4,7 @@ import { PrayerColumn } from './PrayerColumn';
 import { AnnouncementTicker } from './AnnouncementTicker';
 import { Countdown } from './Countdown';
 import { HadithCard } from './HadithCard';
-import type { PrayerEntry, HijriDate, MosqueSettings, NextHijriHoliday, DailyHadith } from '../types';
+import type { PrayerEntry, HijriDate, MosqueSettings, NextHijriHoliday, DisplayHadith } from '../types';
 
 interface MosqueDisplayProps {
   now: Date;
@@ -13,7 +13,9 @@ interface MosqueDisplayProps {
   countdown: string;
   hijri: HijriDate | null;
   nextHoliday: NextHijriHoliday | null;
-  hadith: DailyHadith | null;
+  hadith: DisplayHadith | null;
+  hadithLoading: boolean;
+  hadithTransitioning: boolean;
   settings: MosqueSettings;
   method: string | null;
   onOpenSettings: () => void;
@@ -27,6 +29,8 @@ export function MosqueDisplay({
   hijri,
   nextHoliday,
   hadith,
+  hadithLoading,
+  hadithTransitioning,
   settings,
   method,
   onOpenSettings,
@@ -94,9 +98,9 @@ export function MosqueDisplay({
           </div>
 
           {/* Daily hadith */}
-          {hadith && (
+          {settings.hadith.enabled && (
             <div className='w-full mt-[clamp(0.75rem,1.5vw,2rem)]'>
-              <HadithCard hadith={hadith} />
+              <HadithCard hadith={hadith} loading={hadithLoading} isTransitioning={hadithTransitioning} />
             </div>
           )}
 

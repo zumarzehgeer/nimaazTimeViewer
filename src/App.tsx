@@ -33,7 +33,12 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [date, setDate] = useState<Date>(() => new Date());
   const nextHoliday = useNextHijriHoliday();
-  const { hadith } = useHadith(settings.hadithApiKey || null, date);
+  const { hadith, loading: hadithLoading, isTransitioning: hadithTransitioning } = useHadith({
+    enabled: settings.hadith.enabled,
+    rotationIntervalMinutes: settings.hadith.rotationIntervalMinutes,
+    enabledCollections: settings.hadith.enabledCollections,
+    apiKey: settings.hadith.hadithApiKey,
+  });
 
   // Auto-advance date at midnight (check once per minute)
   useEffect(() => {
@@ -151,6 +156,8 @@ export default function App() {
         hijri={data?.hijri ?? null}
         nextHoliday={nextHoliday}
         hadith={hadith}
+        hadithLoading={hadithLoading}
+        hadithTransitioning={hadithTransitioning}
         settings={settings}
         method={data?.method ?? null}
         onOpenSettings={() => setShowSettings(true)}

@@ -9,10 +9,16 @@ function loadSettings(): MosqueSettings {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       const parsed = JSON.parse(stored)
+      // Migrate old top-level hadithApiKey to new hadith settings object
+      if (typeof parsed.hadithApiKey === 'string' && !parsed.hadith) {
+        parsed.hadith = { ...DEFAULT_SETTINGS.hadith }
+        delete parsed.hadithApiKey
+      }
       return {
         ...DEFAULT_SETTINGS,
         ...parsed,
         iqamahOffsets: { ...DEFAULT_SETTINGS.iqamahOffsets, ...parsed.iqamahOffsets },
+        hadith: { ...DEFAULT_SETTINGS.hadith, ...parsed.hadith },
       }
     }
   } catch { /* ignore */ }
