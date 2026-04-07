@@ -114,6 +114,7 @@ export function MosqueDisplay({
                   hadith={hadith}
                   loading={hadithLoading}
                   isTransitioning={hadithTransitioning}
+                  showArabic={settings.hadith.showArabic}
                 />
               </div>
             )}

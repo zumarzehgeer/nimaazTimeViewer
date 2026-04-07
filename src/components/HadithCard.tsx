@@ -5,9 +5,10 @@ interface HadithCardProps {
   hadith: DisplayHadith | null
   loading: boolean
   isTransitioning: boolean
+  showArabic: boolean
 }
 
-export function HadithCard({ hadith, loading, isTransitioning }: HadithCardProps) {
+export function HadithCard({ hadith, loading, isTransitioning, showArabic }: HadithCardProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -119,6 +120,15 @@ export function HadithCard({ hadith, loading, isTransitioning }: HadithCardProps
       </div>
 
       <div ref={containerRef} className='flex-1 min-h-0 overflow-y-scroll' style={{ scrollbarWidth: 'none' }}>
+        {showArabic && hadith.arabic && (
+          <p
+            className='text-right text-[clamp(0.9rem,1.1vw,1.3rem)] text-[#3c3c3c]/60 leading-relaxed mb-2'
+            dir='rtl'
+            style={{ fontFamily: "'Noto Naskh Arabic', 'Traditional Arabic', serif" }}
+          >
+            {hadith.arabic}
+          </p>
+        )}
         <p className='text-[clamp(0.8rem,1vw,1.15rem)] text-[#3c3c3c]/80 leading-relaxed text-justify'>
           {hadith.english}
         </p>

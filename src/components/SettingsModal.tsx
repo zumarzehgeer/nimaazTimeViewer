@@ -372,6 +372,24 @@ export function SettingsModal({ settings, onSave, onClose }: SettingsModalProps)
             {draft.hadith.enabled && (
               <div className="bg-gray-50 rounded-xl p-3 space-y-4">
 
+                {/* Show Arabic */}
+                <div className="flex items-center justify-between">
+                  <span className={subLabelCls.replace('mb-1.5', 'mb-0')}>Show Arabic Text</span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <span className="text-xs text-gray-500">{draft.hadith.showArabic ? 'On' : 'Off'}</span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={draft.hadith.showArabic}
+                        onChange={(e) => setDraft((d) => ({ ...d, hadith: { ...d.hadith, showArabic: e.target.checked } }))}
+                        className="sr-only"
+                      />
+                      <div className={`w-10 h-5 rounded-full transition-colors ${draft.hadith.showArabic ? 'bg-blue-600' : 'bg-gray-200'}`} />
+                      <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${draft.hadith.showArabic ? 'translate-x-5' : ''}`} />
+                    </div>
+                  </label>
+                </div>
+
                 {/* API Key */}
                 <div>
                   <span className={subLabelCls}>API Key</span>
