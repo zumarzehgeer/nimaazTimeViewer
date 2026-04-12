@@ -17,6 +17,7 @@ interface MosqueDisplayProps {
   prayers: PrayerEntry[];
   nextPrayer: PrayerEntry | null;
   countdown: string;
+  isTomorrow: boolean;
   hijri: HijriDate | null;
   nextHoliday: NextHijriHoliday | null;
   hadith: DisplayHadith | null;
@@ -25,6 +26,9 @@ interface MosqueDisplayProps {
   settings: MosqueSettings;
   method: string | null;
   onOpenSettings: () => void;
+  syncing?: boolean;
+  syncProgress?: number;
+  syncTotal?: number;
 }
 
 export function MosqueDisplay({
@@ -32,6 +36,7 @@ export function MosqueDisplay({
   prayers,
   nextPrayer,
   countdown,
+  isTomorrow,
   hijri,
   nextHoliday,
   hadith,
@@ -40,6 +45,9 @@ export function MosqueDisplay({
   settings,
   method,
   onOpenSettings,
+  syncing,
+  syncProgress,
+  syncTotal,
 }: MosqueDisplayProps) {
   return (
     <div className="flex flex-col bg-[#FFEDD8] min-h-screen lg:h-screen lg:overflow-hidden pb-[clamp(2.5rem,4vw,4rem)]">
@@ -102,7 +110,7 @@ export function MosqueDisplay({
                   </span>
                 </div>
                 <div className="mt-[clamp(0.5rem,1vw,1.5rem)] w-full">
-                  <Countdown nextPrayer={nextPrayer} countdown={countdown} />
+                  <Countdown nextPrayer={nextPrayer} countdown={countdown} isTomorrow={isTomorrow} />
                 </div>
               </div>
             </div>
@@ -144,6 +152,21 @@ export function MosqueDisplay({
           ))}
         </div>
       </div>
+
+      {/* Sync progress indicator — visible only while caching the year's prayer data */}
+      {syncing && syncProgress !== undefined && syncTotal !== undefined && (
+        <div className="w-full px-4 py-1 bg-[#3c3c3c]/10 flex items-center gap-3">
+          <div className="flex-1 h-1 bg-[#3c3c3c]/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#11999e] rounded-full transition-all duration-500"
+              style={{ width: `${(syncProgress / syncTotal) * 100}%` }}
+            />
+          </div>
+          <span className="text-[0.65rem] text-[#3c3c3c]/50 whitespace-nowrap">
+            Syncing prayer data {syncProgress}/{syncTotal}
+          </span>
+        </div>
+      )}
 
       {/* Bottom banner — full width */}
       <AnnouncementTicker announcements={settings.announcements} />

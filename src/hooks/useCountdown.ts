@@ -3,6 +3,7 @@ import type { PrayerEntry } from '../types'
 interface CountdownResult {
   nextPrayer: PrayerEntry | null
   countdown: string
+  isTomorrow: boolean
 }
 
 function parseTime(timeStr: string, baseDate: Date): Date {
@@ -23,9 +24,15 @@ function formatCountdown(ms: number): string {
   return [h, m, s].map((v) => String(v).padStart(2, '0')).join(':')
 }
 
-export function useCountdown(prayers: PrayerEntry[], date: Date, now: Date): CountdownResult {
+export function useCountdown(
+  prayers: PrayerEntry[],
+  date: Date,
+  now: Date,
+  tomorrowPrayers?: PrayerEntry[],
+  tomorrowDate?: Date,
+): CountdownResult {
 
-  if (prayers.length === 0) return { nextPrayer: null, countdown: '00:00:00' }
+  if (prayers.length === 0) return { nextPrayer: null, countdown: '00:00:00', isTomorrow: false }
 
   // Find the next upcoming prayer
   const next = prayers.find((p) => {
@@ -33,10 +40,19 @@ export function useCountdown(prayers: PrayerEntry[], date: Date, now: Date): Cou
     return prayerTime > now
   })
 
-  if (!next) return { nextPrayer: null, countdown: '00:00:00' }
+  if (!next) {
+    // All today's prayers done — fall back to tomorrow's first prayer (Fajr)
+    if (tomorrowPrayers && tomorrowPrayers.length > 0 && tomorrowDate) {
+      const tomorrowFirst = tomorrowPrayers[0]
+      const prayerDate = parseTime(tomorrowFirst.time, tomorrowDate)
+      const countdown = formatCountdown(prayerDate.getTime() - now.getTime())
+      return { nextPrayer: tomorrowFirst, countdown, isTomorrow: true }
+    }
+    return { nextPrayer: null, countdown: '00:00:00', isTomorrow: false }
+  }
 
   const prayerDate = parseTime(next.time, date)
   const countdown = formatCountdown(prayerDate.getTime() - now.getTime())
 
-  return { nextPrayer: next, countdown }
+  return { nextPrayer: next, countdown, isTomorrow: false }
 }

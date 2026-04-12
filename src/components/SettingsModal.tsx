@@ -10,9 +10,10 @@ interface SettingsModalProps {
   settings: MosqueSettings
   onSave: (settings: MosqueSettings) => void
   onClose: () => void
+  onSignOut?: () => void
 }
 
-export function SettingsModal({ settings, onSave, onClose }: SettingsModalProps) {
+export function SettingsModal({ settings, onSave, onClose, onSignOut }: SettingsModalProps) {
   const [draft, setDraft] = useState<MosqueSettings>({ ...settings })
   const [cityQuery, setCityQuery] = useState(settings.location?.label ?? '')
   const [cityResults, setCityResults] = useState<NominatimResult[]>([])
@@ -541,6 +542,19 @@ export function SettingsModal({ settings, onSave, onClose }: SettingsModalProps)
               Save Settings
             </button>
           </div>
+
+          {/* Sign Out */}
+          {onSignOut && (
+            <>
+              <hr className="border-gray-100 mt-2" />
+              <button
+                onClick={onSignOut}
+                className="w-full py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+              >
+                Sign Out
+              </button>
+            </>
+          )}
 
         </div>
       </div>

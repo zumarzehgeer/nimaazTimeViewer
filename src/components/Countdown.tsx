@@ -3,9 +3,10 @@ import type { PrayerEntry } from "../types";
 interface CountdownProps {
   nextPrayer: PrayerEntry | null;
   countdown: string;
+  isTomorrow?: boolean;
 }
 
-export function Countdown({ nextPrayer, countdown }: CountdownProps) {
+export function Countdown({ nextPrayer, countdown, isTomorrow }: CountdownProps) {
   if (!nextPrayer) {
     return (
       <div className="rounded-[clamp(0.75rem,1vw,1.5rem)] px-[clamp(1.5rem,3vw,3rem)] py-[clamp(0.75rem,1.5vw,1.5rem)] text-center bg-white shadow-md">
@@ -19,7 +20,7 @@ export function Countdown({ nextPrayer, countdown }: CountdownProps) {
   return (
     <div className="flex flex-col items-center justify-between rounded-[clamp(0.75rem,1vw,1.5rem)] px-[clamp(1.5rem,2vw,3rem)] py-[clamp(0.75rem,1.5vw,1.5rem)] text-center bg-white shadow-md">
       <p className="text-[clamp(0.7rem,1vw,1.25rem)] font-semibold text-[#11999e]">
-        Next Prayer &middot;{" "}
+        Next Prayer{isTomorrow ? " (Tomorrow)" : ""} &middot;{" "}
         <span className="uppercase">{nextPrayer.name}</span>
       </p>
       <p

@@ -1,5 +1,5 @@
 import { format, parse, differenceInCalendarDays } from 'date-fns'
-import type { AladhanResponse, PrayerTimesData, HijriDate, CalculationMethod, NextHijriHoliday } from '../types'
+import type { AladhanResponse, PrayerTimesData, HijriDate, CalculationMethod, NextHijriHoliday, DayCache } from '../types'
 
 const BASE_URL = 'https://api.aladhan.com/v1'
 
@@ -36,6 +36,29 @@ export async function fetchPrayerTimes(
     hijri: json.data.date.hijri,
     method: json.data.meta.method.name,
   }
+}
+
+export async function fetchMonthCalendar(
+  year: number,
+  month: number,
+  lat: number,
+  lng: number,
+  methodId?: number | null,
+): Promise<DayCache[]> {
+  let url = `${BASE_URL}/calendar/${year}/${month}?latitude=${lat}&longitude=${lng}`
+  if (methodId != null) url += `&method=${methodId}`
+
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Request failed with status ${res.status}`)
+  const json = await res.json()
+  if (json.code !== 200) throw new Error('Unexpected API response')
+
+  return (json.data as AladhanResponse['data'][]).map((day) => ({
+    date: day.date.gregorian.date,   // "DD-MM-YYYY"
+    timings: day.timings,
+    hijri: day.date.hijri,
+    method: day.meta.method.name,
+  }))
 }
 
 export async function fetchMethods(): Promise<CalculationMethod[]> {

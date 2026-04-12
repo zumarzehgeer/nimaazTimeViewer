@@ -153,6 +153,30 @@ export interface NextHijriHoliday {
   daysUntil: number
 }
 
+export interface DayCache {
+  date: string           // "DD-MM-YYYY" gregorian
+  timings: PrayerTimesData
+  hijri: HijriDate
+  method: string
+}
+
+export interface MonthCache {
+  days: DayCache[]
+  fetchedAt: number
+  lat: number
+  lng: number
+  methodId: number | null
+}
+
+export interface UserProfile {
+  uid: string
+  email: string
+  mosqueName: string
+  phoneNumber: string
+  location: LocationState | null
+  createdAt: number
+}
+
 export const PRAYER_KEYS = [
   'Imsak',
   'Fajr',

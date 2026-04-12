@@ -1,16 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MosqueDisplay } from './components/MosqueDisplay';
 import { SettingsModal } from './components/SettingsModal';
 import { LocationSearch } from './components/LocationSearch';
+import { AuthScreen } from './components/AuthScreen';
 import { usePrayerTimes } from './hooks/usePrayerTimes';
 import { useCountdown } from './hooks/useCountdown';
 import { useClock } from './hooks/useClock';
 import { useSettings } from './hooks/useSettings';
+import { useAuth } from './hooks/useAuth';
+import { usePrayerCache } from './hooks/usePrayerCache';
 import { useNextHijriHoliday } from './hooks/useNextHijriHoliday';
 import { useHadith } from './hooks/useHadith';
 import { getTimeOfDay, BACKGROUNDS } from './hooks/useBackground';
 import type { PrayerEntry, LocationState, MosqueSettings } from './types';
 import { PRAYER_KEYS } from './types';
+import type { PrayerTimesResult } from './services/aladhan';
 
 function addIqamahTime(adhanTime: string, offsetMinutes: number): string {
   const clean = adhanTime.split(' ')[0];
@@ -27,9 +31,44 @@ const DISPLAY_NAMES: Record<string, string> = {
 
 const CONGREGATIONAL_KEYS = ['Fajr', 'Dhuhr', 'Jumuah', 'Asr', 'Maghrib', 'Isha'];
 
+function buildPrayerList(data: PrayerTimesResult, settings: MosqueSettings): PrayerEntry[] {
+  const list: PrayerEntry[] = PRAYER_KEYS
+    .filter((key) => key !== 'Imsak' && data.timings[key] !== undefined)
+    .map((key) => ({
+      name: DISPLAY_NAMES[key] ?? key,
+      key,
+      time: data.timings[key],
+      iqamahTime:
+        key !== 'Sunrise' && key in settings.iqamahOffsets
+          ? addIqamahTime(data.timings[key], settings.iqamahOffsets[key as keyof typeof settings.iqamahOffsets])
+          : null,
+    }));
+  const dhuhrIndex = list.findIndex((p) => p.key === 'Dhuhr');
+  if (dhuhrIndex !== -1) {
+    const jumuahAdhan = settings.jumuahAdhan || list[dhuhrIndex].time;
+    list.splice(dhuhrIndex + 1, 0, {
+      name: "Jumu'ah",
+      key: 'Jumuah',
+      time: jumuahAdhan,
+      iqamahTime: addIqamahTime(jumuahAdhan, settings.iqamahOffsets.Jumuah),
+    });
+  }
+  return list;
+}
+
+function filterCongregational(prayers: PrayerEntry[], isFriday: boolean): PrayerEntry[] {
+  return prayers.filter((p) => {
+    if (!CONGREGATIONAL_KEYS.includes(p.key)) return false;
+    if (p.key === 'Dhuhr' && isFriday) return false;
+    if (p.key === 'Jumuah' && !isFriday) return false;
+    return true;
+  });
+}
+
 export default function App() {
   const now = useClock();
-  const { settings, setSettings } = useSettings();
+  const { user, authLoading, signOut } = useAuth();
+  const { settings, setSettings } = useSettings(user?.uid ?? null);
   const [showSettings, setShowSettings] = useState(false);
   const [date, setDate] = useState<Date>(() => new Date());
   const nextHoliday = useNextHijriHoliday();
@@ -52,48 +91,49 @@ export default function App() {
     return () => clearInterval(id);
   }, [date]);
 
-  const { data, loading, error } = usePrayerTimes(
-    settings.location ? date : null,
+  const tomorrow = useMemo(() => {
+    const d = new Date(date);
+    d.setDate(d.getDate() + 1);
+    return d;
+  }, [date]);
+
+  const { getTimingsForDate, syncing, syncProgress, syncTotal } = usePrayerCache(
+    user?.uid ?? null,
+    settings.location,
+    settings.methodId,
+  );
+
+  const cachedData = settings.location ? getTimingsForDate(date) : null;
+  const cachedTomorrow = settings.location ? getTimingsForDate(tomorrow) : null;
+
+  // Fall back to live API only when cache doesn't have the day yet
+  const { data: apiData, loading, error } = usePrayerTimes(
+    !cachedData && settings.location ? date : null,
     settings.location?.lat ?? null,
     settings.location?.lng ?? null,
     settings.methodId,
   );
 
-  const prayers: PrayerEntry[] = data
-    ? (() => {
-        const list: PrayerEntry[] = PRAYER_KEYS.filter((key) => key !== 'Imsak' && data.timings[key] !== undefined).map((key) => ({
-          name: DISPLAY_NAMES[key] ?? key,
-          key,
-          time: data.timings[key],
-          iqamahTime:
-            key !== 'Sunrise' && key in settings.iqamahOffsets
-              ? addIqamahTime(data.timings[key], settings.iqamahOffsets[key as keyof typeof settings.iqamahOffsets])
-              : null,
-        }));
+  const { data: apiTomorrowData } = usePrayerTimes(
+    !cachedTomorrow && settings.location ? tomorrow : null,
+    settings.location?.lat ?? null,
+    settings.location?.lng ?? null,
+    settings.methodId,
+  );
 
-        const dhuhrIndex = list.findIndex((p) => p.key === 'Dhuhr');
-        if (dhuhrIndex !== -1) {
-          const jumuahAdhan = settings.jumuahAdhan || list[dhuhrIndex].time;
-          list.splice(dhuhrIndex + 1, 0, {
-            name: "Jumu'ah",
-            key: 'Jumuah',
-            time: jumuahAdhan,
-            iqamahTime: addIqamahTime(jumuahAdhan, settings.iqamahOffsets.Jumuah),
-          });
-        }
+  const data = cachedData ?? apiData;
+  const tomorrowData = cachedTomorrow ?? apiTomorrowData;
 
-        return list;
-      })()
+  const prayers = data ? buildPrayerList(data, settings) : [];
+  const isFriday = date.getDay() === 5;
+  const congregationalPrayers = filterCongregational(prayers, isFriday);
+
+  const tomorrowIsFriday = tomorrow.getDay() === 5;
+  const tomorrowCongregationalPrayers = tomorrowData
+    ? filterCongregational(buildPrayerList(tomorrowData, settings), tomorrowIsFriday)
     : [];
 
-  const isFriday = date.getDay() === 5;
-  const congregationalPrayers = prayers.filter((p) => {
-    if (!CONGREGATIONAL_KEYS.includes(p.key)) return false;
-    if (p.key === 'Dhuhr' && isFriday) return false; // Jumuah replaces Dhuhr in countdown on Fridays
-    if (p.key === 'Jumuah' && !isFriday) return false;
-    return true;
-  });
-  const { nextPrayer, countdown } = useCountdown(congregationalPrayers, date, now);
+  const { nextPrayer, countdown, isTomorrow } = useCountdown(congregationalPrayers, date, now, tomorrowCongregationalPrayers, tomorrow);
 
   const timeOfDay = getTimeOfDay(data?.timings ?? null);
   const bgClass = BACKGROUNDS[timeOfDay];
@@ -106,6 +146,19 @@ export default function App() {
   const handleSetupLocation = (loc: LocationState) => {
     setSettings((prev) => ({ ...prev, location: loc }));
   };
+
+  // Auth loading — Firebase resolves from IndexedDB cache in ~50ms
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center">
+        <div className="text-4xl animate-pulse">🕌</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthScreen />;
+  }
 
   // First-time setup: no location configured
   if (!settings.location) {
@@ -154,6 +207,7 @@ export default function App() {
         prayers={prayers}
         nextPrayer={nextPrayer}
         countdown={countdown}
+        isTomorrow={isTomorrow}
         hijri={data?.hijri ?? null}
         nextHoliday={nextHoliday}
         hadith={hadith}
@@ -162,9 +216,12 @@ export default function App() {
         settings={settings}
         method={data?.method ?? null}
         onOpenSettings={() => setShowSettings(true)}
+        syncing={syncing}
+        syncProgress={syncProgress}
+        syncTotal={syncTotal}
       />
       {showSettings && (
-        <SettingsModal settings={settings} onSave={handleSaveSettings} onClose={() => setShowSettings(false)} />
+        <SettingsModal settings={settings} onSave={handleSaveSettings} onClose={() => setShowSettings(false)} onSignOut={signOut} />
       )}
     </>
   );
