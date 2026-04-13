@@ -7,6 +7,7 @@ import type { LocationState, DayCache, MonthCache } from '../types'
 import type { PrayerTimesResult } from '../services/aladhan'
 
 const FAILED_MONTHS_KEY = 'nimaaz-failed-months'
+const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
 
 interface UsePrayerCacheReturn {
   getTimingsForDate: (date: Date) => PrayerTimesResult | null
@@ -69,7 +70,6 @@ export function usePrayerCache(
     async function ensureYears() {
       const newCache: Record<string, DayCache> = {}
       let completed = 0
-      let needsSync = false
 
       // Fetch all Firestore docs in parallel — hits IndexedDB cache instantly when offline
       const snaps = await Promise.all(docRefs.map((ref) => getDoc(ref).catch(() => null)))
@@ -82,17 +82,20 @@ export function usePrayerCache(
         const { year, month, key } = allMonths[i]
         const snap = snaps[i]
         let monthData: MonthCache | null = null
+        let staleData: MonthCache | null = null
 
         if (snap?.exists()) {
           const stored = snap.data() as MonthCache
-          if (stored.lat === lat && stored.lng === lng && stored.methodId === methodId) {
+          const fresh = Date.now() - stored.fetchedAt < CACHE_TTL_MS
+          if (fresh && stored.lat === lat && stored.lng === lng && stored.methodId === methodId) {
             monthData = stored
             failedMonths.delete(key)
+          } else if (stored.days?.length) {
+            staleData = stored // keep as offline fallback if refresh fails
           }
         }
 
         if (!monthData) {
-          needsSync = true
           setSyncing(true)
 
           try {
@@ -102,10 +105,39 @@ export function usePrayerCache(
             setDoc(docRefs[i], monthData).catch(console.error)
             failedMonths.delete(key)
           } catch {
-            failedMonths.add(key)
-            completed++
-            setSyncProgress(completed)
-            continue
+            if (staleData) {
+              monthData = staleData // serve stale times rather than nothing
+            } else {
+              // Last resort: try the same month from the previous year.
+              // Prayer times shift ~1-4 min/year — approximate but far better
+              // than a blank screen after a full year offline.
+              const prevYearRef = doc(db, 'users', uid!, 'prayerCache', monthKey(year - 1, month))
+              try {
+                const prevSnap = await getDoc(prevYearRef)
+                if (prevSnap.exists()) {
+                  const prevData = prevSnap.data() as MonthCache
+                  if (prevData.days?.length) {
+                    // Re-key dates from the previous year to the current year so
+                    // getTimingsForDate("15-01-2027") finds "15-01-2027", not "15-01-2026".
+                    // day.date format is "DD-MM-YYYY" — slice(0,6) gives "DD-MM-".
+                    monthData = {
+                      ...prevData,
+                      days: prevData.days.map((d) => ({
+                        ...d,
+                        date: d.date.slice(0, 6) + year,
+                      })),
+                    }
+                  }
+                }
+              } catch { /* ignore — truly no data available */ }
+
+              if (!monthData) {
+                failedMonths.add(key)
+                completed++
+                setSyncProgress(completed)
+                continue
+              }
+            }
           }
         }
 
@@ -120,7 +152,7 @@ export function usePrayerCache(
 
       if (!aborted) {
         setCache(newCache)
-        if (needsSync) setSyncing(false)
+        setSyncing(false)
       }
     }
 

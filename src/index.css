@@ -23,3 +23,20 @@ body {
 .animate-marquee {
   animation: marquee 30s linear infinite;
 }
+
+@keyframes modal-enter {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-modal-enter { animation: modal-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@keyframes backdrop-enter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-backdrop-enter { animation: backdrop-enter 0.18s ease-out forwards; }
+
+.islamic-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M20 0 L40 20 L20 40 L0 20 Z' fill='none' stroke='%2311999e' stroke-width='0.4' opacity='0.18'/%3E%3Ccircle cx='20' cy='20' r='6' fill='none' stroke='%2311999e' stroke-width='0.4' opacity='0.15'/%3E%3Cpath d='M20 0 L20 40 M0 20 L40 20' stroke='%2311999e' stroke-width='0.3' opacity='0.1'/%3E%3C/svg%3E");
+  background-size: 40px 40px;
+}
