@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#0f172a"/>
+
+  <!-- Geometric ring -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#11999e" stroke-width="6" opacity="0.25"/>
+  <circle cx="256" cy="256" r="170" fill="none" stroke="#11999e" stroke-width="2" opacity="0.15"/>
+
+  <!-- Crescent moon -->
+  <circle cx="256" cy="176" r="72" fill="#11999e"/>
+  <circle cx="284" cy="158" r="60" fill="#0f172a"/>
+
+  <!-- Minaret left -->
+  <rect x="132" y="310" width="28" height="110" rx="4" fill="#11999e" opacity="0.85"/>
+  <polygon points="132,310 146,272 160,310" fill="#11999e"/>
+  <rect x="139" y="265" width="14" height="14" rx="7" fill="#e2d9c6"/>
+
+  <!-- Minaret right -->
+  <rect x="352" y="310" width="28" height="110" rx="4" fill="#11999e" opacity="0.85"/>
+  <polygon points="352,310 366,272 380,310" fill="#11999e"/>
+  <rect x="359" y="265" width="14" height="14" rx="7" fill="#e2d9c6"/>
+
+  <!-- Main dome base -->
+  <rect x="176" y="360" width="160" height="60" rx="6" fill="#11999e" opacity="0.9"/>
+
+  <!-- Dome -->
+  <path d="M176,360 Q176,280 256,270 Q336,280 336,360 Z" fill="#11999e"/>
+
+  <!-- Door arch -->
+  <path d="M232,420 L232,385 Q232,368 256,368 Q280,368 280,385 L280,420 Z" fill="#0f172a" opacity="0.7"/>
+
+  <!-- Star on dome peak -->
+  <polygon points="256,262 260,274 272,274 263,281 266,293 256,286 246,293 249,281 240,274 252,274"
+           fill="#e2d9c6" opacity="0.9"/>
+</svg>

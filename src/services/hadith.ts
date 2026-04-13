@@ -1,8 +1,9 @@
 import type { DisplayHadith, HadithCollection } from '../types'
 import { COLLECTION_COUNTS, COLLECTION_LABELS } from '../types'
 
-// In dev, use Vite proxy to avoid CORS. In prod, call the API directly.
-const BASE_URL = import.meta.env.DEV ? '/hadith-api' : 'https://hadithapi.com/public/api'
+// Always use /hadith-api — Vite proxies it in dev, Firebase Hosting routes it
+// to the hadithProxy Cloud Function in production (avoids CORS on hadithapi.com).
+const BASE_URL = '/hadith-api'
 
 /**
  * Compute which rotation slot we're in based on the current time and interval.
