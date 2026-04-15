@@ -70,6 +70,12 @@ export default function App() {
   const { user, authLoading, signOut } = useAuth();
   const { settings, setSettings } = useSettings(user?.uid ?? null);
   const [showSettings, setShowSettings] = useState(false);
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    try { return localStorage.getItem('nimaaz-theme') !== 'light' } catch { return true }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('nimaaz-theme', isDark ? 'dark' : 'light') } catch { /* ignore */ }
+  }, [isDark]);
   const [date, setDate] = useState<Date>(() => new Date());
   const nextHoliday = useNextHijriHoliday();
   const { hadith, loading: hadithLoading, isTransitioning: hadithTransitioning } = useHadith({
@@ -137,7 +143,7 @@ export default function App() {
 
   const timeOfDay = getTimeOfDay(data?.timings ?? null);
   const bgClass = BACKGROUNDS[timeOfDay];
-  const isDark = ['night', 'dawn', 'sunset', 'evening'].includes(timeOfDay);
+  const loadingScreenDark = ['night', 'dawn', 'sunset', 'evening'].includes(timeOfDay);
 
   const handleSaveSettings = (newSettings: MosqueSettings) => {
     setSettings(newSettings);
@@ -180,7 +186,7 @@ export default function App() {
       <div className={`min-h-screen bg-gradient-to-br ${bgClass} flex items-center justify-center`}>
         <div className='text-center'>
           <div className='text-4xl md:text-5xl mb-4 animate-pulse'>🕌</div>
-          <p className={`text-sm md:text-base ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>
+          <p className={`text-sm md:text-base ${loadingScreenDark ? 'text-gray-300' : 'text-gray-500'}`}>
             Loading prayer times...
           </p>
         </div>
@@ -219,9 +225,11 @@ export default function App() {
         syncing={syncing}
         syncProgress={syncProgress}
         syncTotal={syncTotal}
+        isDark={isDark}
+        onToggleTheme={() => setIsDark(v => !v)}
       />
       {showSettings && (
-        <SettingsModal settings={settings} onSave={handleSaveSettings} onClose={() => setShowSettings(false)} onSignOut={signOut} />
+        <SettingsModal settings={settings} onSave={handleSaveSettings} onClose={() => setShowSettings(false)} onSignOut={signOut} isDark={isDark} />
       )}
     </>
   );

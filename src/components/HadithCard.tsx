@@ -6,12 +6,14 @@ interface HadithCardProps {
   loading: boolean
   isTransitioning: boolean
   showArabic: boolean
+  isDark: boolean
 }
 
-export function HadithCard({ hadith, loading, isTransitioning, showArabic }: HadithCardProps) {
+export function HadithCard({ hadith, loading, isTransitioning, showArabic, isDark }: HadithCardProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const d = isDark
 
   useEffect(() => {
     const el = containerRef.current
@@ -41,14 +43,13 @@ export function HadithCard({ hadith, loading, isTransitioning, showArabic }: Had
       const tick = (timestamp: number) => {
         if (stopped) return
         if (lastTime === null) { lastTime = timestamp }
-        const delta = (timestamp - lastTime) / 1000 // seconds elapsed
+        const delta = (timestamp - lastTime) / 1000
         lastTime = timestamp
 
         position += pxPerSecond * delta
         if (position >= overflow) {
           position = overflow
           el.scrollTop = position
-          // pause 6s at bottom, then jump to top and pause 4s before restarting
           timerRef.current = setTimeout(() => {
             if (stopped) return
             position = 0
@@ -65,20 +66,14 @@ export function HadithCard({ hadith, loading, isTransitioning, showArabic }: Had
         rafRef.current = requestAnimationFrame(tick)
       }
 
-      // initial 4s pause before first scroll
       timerRef.current = setTimeout(() => {
         if (stopped) return
         rafRef.current = requestAnimationFrame(tick)
       }, 4000)
     }
 
-    // ResizeObserver fires after the browser has measured the element,
-    // guaranteeing clientHeight and scrollHeight are accurate.
-    // Only start scroll on the first observation; ignore subsequent resize events.
     const ro = new ResizeObserver(() => {
-      if (!scrollStarted) {
-        startScroll()
-      }
+      if (!scrollStarted) startScroll()
     })
     ro.observe(el)
 
@@ -91,12 +86,12 @@ export function HadithCard({ hadith, loading, isTransitioning, showArabic }: Had
 
   if (loading && !hadith) {
     return (
-      <div className='bg-white/40 rounded-xl px-[clamp(0.75rem,1.5vw,1.5rem)] py-[clamp(0.5rem,1vw,1rem)] border border-[#3c3c3c]/8 animate-pulse'>
-        <div className='h-3 bg-[#3c3c3c]/10 rounded w-1/3 mb-3' />
-        <div className='h-3 bg-[#3c3c3c]/10 rounded w-3/4 mb-2 ml-auto' />
-        <div className='h-3 bg-[#3c3c3c]/10 rounded w-full mb-1' />
-        <div className='h-3 bg-[#3c3c3c]/10 rounded w-5/6 mb-1' />
-        <div className='h-3 bg-[#3c3c3c]/10 rounded w-4/6' />
+      <div className={`rounded-xl px-[clamp(0.75rem,1.5vw,1.5rem)] py-[clamp(0.5rem,1vw,1rem)] border animate-pulse transition-colors ${d ? 'bg-[#132628] border-[#11999e]/20' : 'bg-white border-[#11999e]/20'}`}>
+        <div className={`h-3 rounded w-1/3 mb-3 ${d ? 'bg-[#11999e]/10' : 'bg-[#11999e]/8'}`} />
+        <div className={`h-3 rounded w-3/4 mb-2 ml-auto ${d ? 'bg-[#f0ebe0]/5' : 'bg-[#1a3035]/5'}`} />
+        <div className={`h-3 rounded w-full mb-1 ${d ? 'bg-[#f0ebe0]/5' : 'bg-[#1a3035]/5'}`} />
+        <div className={`h-3 rounded w-5/6 mb-1 ${d ? 'bg-[#f0ebe0]/5' : 'bg-[#1a3035]/5'}`} />
+        <div className={`h-3 rounded w-4/6 ${d ? 'bg-[#f0ebe0]/5' : 'bg-[#1a3035]/5'}`} />
       </div>
     )
   }
@@ -105,15 +100,15 @@ export function HadithCard({ hadith, loading, isTransitioning, showArabic }: Had
 
   return (
     <div
-      className={`bg-white/40 rounded-xl px-[clamp(0.75rem,1.5vw,1.5rem)] py-[clamp(0.5rem,1vw,1rem)] border border-[#3c3c3c]/8 transition-opacity duration-300 max-h-full min-h-0 flex flex-col ${
+      className={`rounded-xl px-[clamp(0.75rem,1.5vw,1.5rem)] py-[clamp(0.5rem,1vw,1rem)] border transition-opacity duration-300 max-h-full min-h-0 flex flex-col ${
         isTransitioning ? 'opacity-0' : 'opacity-100'
-      }`}
+      } ${d ? 'bg-[#132628] border-[#11999e]/20' : 'bg-white border-[#11999e]/20'}`}
     >
       <div className='flex-shrink-0 mb-2'>
         <p className='text-[clamp(0.65rem,0.85vw,0.95rem)] text-[#11999e] font-semibold uppercase tracking-widest'>
           Hadith
         </p>
-        <p className='text-[clamp(0.7rem,0.85vw,0.95rem)] text-[#11999e] font-medium'>
+        <p className={`text-[clamp(0.7rem,0.85vw,0.95rem)] font-medium transition-colors ${d ? 'text-[#e8c97e]' : 'text-[#9b6f1a]'}`}>
           {hadith.source} · #{hadith.number}
           {hadith.chapter ? ` · Book of ${hadith.chapter}` : ''}
         </p>
@@ -122,14 +117,14 @@ export function HadithCard({ hadith, loading, isTransitioning, showArabic }: Had
       <div ref={containerRef} className='flex-1 min-h-0 overflow-y-scroll' style={{ scrollbarWidth: 'none' }}>
         {showArabic && hadith.arabic && (
           <p
-            className='text-right text-[clamp(0.9rem,1.1vw,1.3rem)] text-[#3c3c3c]/60 leading-relaxed mb-2'
+            className={`text-right text-[clamp(0.9rem,1.1vw,1.3rem)] leading-relaxed mb-2 transition-colors ${d ? 'text-[#f0ebe0]/45' : 'text-[#1a3035]/40'}`}
             dir='rtl'
             style={{ fontFamily: "'Noto Naskh Arabic', 'Traditional Arabic', serif" }}
           >
             {hadith.arabic}
           </p>
         )}
-        <p className='text-[clamp(0.8rem,1vw,1.15rem)] text-[#3c3c3c]/80 leading-relaxed text-justify'>
+        <p className={`text-[clamp(0.8rem,1vw,1.15rem)] leading-relaxed text-justify transition-colors ${d ? 'text-[#f0ebe0]/80' : 'text-[#1a3035]/80'}`}>
           {hadith.english}
         </p>
       </div>
