@@ -28,13 +28,13 @@ export function Countdown({ nextPrayer, countdown, isTomorrow, isDark }: Countdo
       </p>
       <p
         className={`text-[clamp(0.85rem,1.2vw,1.4rem)] font-bold uppercase tracking-wider mt-0.5 transition-colors ${d ? 'text-[#e8c97e]' : 'text-[#9b6f1a]'}`}
-        style={{ fontFamily: "'Cinzel', serif" }}
+        style={{ fontFamily: "'Nunito Sans', sans-serif" }}
       >
         {nextPrayer.name}
       </p>
       <p
-        className={`text-[clamp(1rem,2vw,3rem)] font-bold tracking-tight leading-tight mt-1 transition-colors ${d ? 'text-[#f0ebe0]' : 'text-[#1a3035]'}`}
-        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+        className={`text-[clamp(1rem,2vw,3rem)] font-bold tracking-tight leading-tight mt-1 tabular-nums transition-colors ${d ? 'text-[#f0ebe0]' : 'text-[#1a3035]'}`}
+        style={{ fontFamily: "'Nunito Sans', sans-serif" }}
       >
         {countdown}
       </p>

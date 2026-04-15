@@ -86,7 +86,7 @@ export function PrayerColumn({ prayer, isNext, isDark }: PrayerColumnProps) {
             ? (d ? 'text-[#f0ebe0]' : 'text-white')
             : (d ? 'text-[#f0ebe0]/70' : 'text-[#1a3035]/70')
         }`}
-        style={{ fontFamily: "'Cinzel', serif" }}
+        style={{ fontFamily: "'Nunito Sans', sans-serif" }}
       >
         {prayer.name}
       </p>
@@ -103,12 +103,12 @@ export function PrayerColumn({ prayer, isNext, isDark }: PrayerColumnProps) {
           </p>
         )}
         <p
-          className={`text-[clamp(1rem,1.8vw,2rem)] font-bold ${
+          className={`text-[clamp(1rem,1.8vw,2rem)] font-bold tabular-nums ${
             isNext
               ? (d ? 'text-[#f0ebe0]' : 'text-white')
               : (d ? 'text-[#f0ebe0]/80' : 'text-[#1a3035]/80')
           }`}
-          style={{ fontFamily: "'JetBrains Mono', monospace" }}
+          style={{ fontFamily: "'Nunito Sans', sans-serif" }}
         >
           {to12Hour(prayer.time)}
         </p>
@@ -126,12 +126,12 @@ export function PrayerColumn({ prayer, isNext, isDark }: PrayerColumnProps) {
               Iqamah
             </p>
             <p
-              className={`text-[clamp(1rem,1.8vw,2rem)] font-semibold ${
+              className={`text-[clamp(1rem,1.8vw,2rem)] font-semibold tabular-nums ${
                 isNext
                   ? (d ? 'text-[#6decb9]' : 'text-white')
                   : (d ? 'text-[#6decb9]' : 'text-[#0a7a6e]')
               }`}
-              style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              style={{ fontFamily: "'Nunito Sans', sans-serif" }}
             >
               {to12Hour(prayer.iqamahTime)}
             </p>

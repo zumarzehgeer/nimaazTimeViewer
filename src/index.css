@@ -8,7 +8,7 @@
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
 }
 
 @keyframes marquee {
@@ -37,15 +37,17 @@ body {
 .animate-backdrop-enter { animation: backdrop-enter 0.18s ease-out forwards; }
 
 /* Islamic geometric pattern — dark theme (white strokes on deep background) */
+/* 8-pointed star lattice: tips touch tile edges so stars interlock seamlessly;
+   inner rotated square adds the classic two-layer Islamic geometric depth */
 .islamic-pattern-dark {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M20 0 L40 20 L20 40 L0 20 Z' fill='none' stroke='%23ffffff' stroke-width='0.4' opacity='0.06'/%3E%3Ccircle cx='20' cy='20' r='6' fill='none' stroke='%23ffffff' stroke-width='0.4' opacity='0.05'/%3E%3Cpath d='M20 0 L20 40 M0 20 L40 20' stroke='%23ffffff' stroke-width='0.3' opacity='0.03'/%3E%3C/svg%3E");
-  background-size: 40px 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M40,0 L54,26 L80,40 L54,54 L40,80 L26,54 L0,40 L26,26Z' fill='none' stroke='%23ffffff' stroke-width='0.6' stroke-opacity='0.06'/%3E%3Cpath d='M40,26 L54,40 L40,54 L26,40Z' fill='none' stroke='%23ffffff' stroke-width='0.4' stroke-opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 80px 80px;
 }
 
 /* Islamic geometric pattern — light theme (teal strokes on ivory background) */
 .islamic-pattern-light {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M20 0 L40 20 L20 40 L0 20 Z' fill='none' stroke='%2311999e' stroke-width='0.4' opacity='0.18'/%3E%3Ccircle cx='20' cy='20' r='6' fill='none' stroke='%2311999e' stroke-width='0.4' opacity='0.14'/%3E%3Cpath d='M20 0 L20 40 M0 20 L40 20' stroke='%2311999e' stroke-width='0.3' opacity='0.08'/%3E%3C/svg%3E");
-  background-size: 40px 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M40,0 L54,26 L80,40 L54,54 L40,80 L26,54 L0,40 L26,26Z' fill='none' stroke='%2311999e' stroke-width='0.6' stroke-opacity='0.17'/%3E%3Cpath d='M40,26 L54,40 L40,54 L26,40Z' fill='none' stroke='%2311999e' stroke-width='0.4' stroke-opacity='0.11'/%3E%3C/svg%3E");
+  background-size: 80px 80px;
 }
 
 /* Pulsing teal glow for the active (next) prayer card */

@@ -70,7 +70,7 @@ export function MosqueDisplay({
                 {settings.mosqueName && (
                   <p
                     className={`text-[clamp(1.1rem,1.5vw,2rem)] font-bold leading-tight mb-1 transition-colors ${d ? 'text-[#e8c97e]' : 'text-[#9b6f1a]'}`}
-                    style={{ fontFamily: "'Cinzel', serif" }}
+                    style={{ fontFamily: "'Nunito Sans', sans-serif" }}
                   >
                     {settings.mosqueName}
                   </p>
@@ -107,8 +107,8 @@ export function MosqueDisplay({
               <div className="flex-shrink-0 flex flex-col items-end">
                 <div className="text-right whitespace-nowrap">
                   <span
-                    className={`text-[clamp(2rem,3.5vw,4.5rem)] font-bold tracking-tight transition-colors ${d ? 'text-[#f0ebe0]' : 'text-[#1a3035]'}`}
-                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                    className={`text-[clamp(2rem,3.5vw,4.5rem)] font-bold tracking-tight tabular-nums transition-colors ${d ? 'text-[#f0ebe0]' : 'text-[#1a3035]'}`}
+                    style={{ fontFamily: "'Nunito Sans', sans-serif" }}
                   >
                     {format(now, "hh:mm:ss")}
                   </span>
