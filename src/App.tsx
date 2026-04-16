@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { MosqueDisplay } from './components/MosqueDisplay';
 import { SettingsModal } from './components/SettingsModal';
 import { LocationSearch } from './components/LocationSearch';
@@ -140,6 +140,25 @@ export default function App() {
     : [];
 
   const { nextPrayer, countdown, isTomorrow } = useCountdown(congregationalPrayers, date, now, tomorrowCongregationalPrayers, tomorrow);
+
+  // Auto-switch theme: dark after Maghrib, light after Fajr
+  const prevAutoTheme = useRef<boolean | null>(null);
+  useEffect(() => {
+    const fajr = prayers.find(p => p.key === 'Fajr');
+    const maghrib = prayers.find(p => p.key === 'Maghrib');
+    if (!fajr || !maghrib) return;
+    const parseT = (timeStr: string) => {
+      const [h, m] = timeStr.split(' ')[0].split(':').map(Number);
+      const d = new Date(date);
+      d.setHours(h, m, 0, 0);
+      return d;
+    };
+    const shouldBeDark = now < parseT(fajr.time) || now >= parseT(maghrib.time);
+    if (prevAutoTheme.current !== shouldBeDark) {
+      prevAutoTheme.current = shouldBeDark;
+      setIsDark(shouldBeDark);
+    }
+  }, [now, prayers, date]);
 
   const timeOfDay = getTimeOfDay(data?.timings ?? null);
   const bgClass = BACKGROUNDS[timeOfDay];
