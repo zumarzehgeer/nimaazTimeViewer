@@ -53,7 +53,9 @@ export function useHadith(options: UseHadithOptions): UseHadithReturn {
           sessionStorage.setItem(cacheKey, JSON.stringify(result))
           apply(result)
         }
-      } catch { /* fail silently */ } finally {
+      } catch (err) {
+        console.error('[hadith] fetch failed', err)
+      } finally {
         setLoading(false)
       }
     },
