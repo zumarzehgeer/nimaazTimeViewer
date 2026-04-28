@@ -166,6 +166,16 @@ export function SettingsModal({ settings, onSave, onClose, onSignOut, isDark = f
     setDraft((prev) => ({ ...prev, iqamahOffsets: { ...prev.iqamahOffsets, [key]: minutes } }))
   }
 
+  const updateManualTime = (key: string, field: 'adhan' | 'iqamah', value: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      manualTimes: {
+        ...prev.manualTimes,
+        [key]: { ...prev.manualTimes?.[key], [field]: value || undefined },
+      },
+    }))
+  }
+
   // Theme-aware class helpers
   const modalBg    = d ? 'bg-[#132628] border-[#11999e]/15'          : 'bg-[#FFF8F0] border-[#11999e]/10'
   const sidebarBg  = d ? 'bg-[#0d1e20] border-[#11999e]/15'          : 'bg-[#FFF3E8] border-[#11999e]/10'
@@ -347,6 +357,57 @@ export function SettingsModal({ settings, onSave, onClose, onSignOut, isDark = f
             {/* ── Prayers ── */}
             {activeTab === 'prayers' && (
               <>
+                <SectionCard title="Manual Prayer Times" isDark={d}>
+                  <div className='flex items-center justify-between -mt-1 mb-3'>
+                    <p className={`text-xs ${mutedText}`}>Leave blank to use calculated times</p>
+                    <button
+                      type='button'
+                      onClick={() => setDraft((prev) => ({ ...prev, manualTimes: {} }))}
+                      className={`text-xs px-2 py-1 rounded-md border transition-colors ${d ? 'border-[#11999e]/20 text-[#7ba8ac] hover:text-[#f0ebe0] hover:bg-[#11999e]/10' : 'border-[#11999e]/20 text-[#5a8a8e] hover:text-[#1a3035] hover:bg-[#11999e]/10'}`}
+                    >
+                      Reset all
+                    </button>
+                  </div>
+                  <div className='flex flex-col gap-2'>
+                    <div className='grid grid-cols-[1fr_1fr_1fr_auto] gap-2 px-3 py-1.5'>
+                      <span className={`text-xs font-semibold uppercase tracking-wide ${mutedText}`}>Prayer</span>
+                      <span className={`text-xs font-semibold uppercase tracking-wide ${mutedText}`}>Adhan</span>
+                      <span className={`text-xs font-semibold uppercase tracking-wide ${mutedText}`}>Iqamah</span>
+                      <span />
+                    </div>
+                    {(['Fajr', 'Dhuhr', 'Jumuah', 'Asr', 'Maghrib', 'Isha'] as const).map((key) => (
+                      <div key={key} className={`grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center rounded-lg px-3 py-2 border ${rowBg}`}>
+                        <span className='text-xs font-semibold text-[#11999e]'>{key === 'Jumuah' ? "Jumu'ah" : key}</span>
+                        <input
+                          type='time'
+                          value={draft.manualTimes?.[key]?.adhan ?? ''}
+                          onChange={(e) => updateManualTime(key, 'adhan', e.target.value)}
+                          className={inlineInput}
+                        />
+                        <input
+                          type='time'
+                          value={draft.manualTimes?.[key]?.iqamah ?? ''}
+                          onChange={(e) => updateManualTime(key, 'iqamah', e.target.value)}
+                          className={inlineInput}
+                        />
+                        <button
+                          type='button'
+                          onClick={() => setDraft((prev) => {
+                            const next = { ...prev.manualTimes }
+                            delete next[key]
+                            return { ...prev, manualTimes: next }
+                          })}
+                          disabled={!draft.manualTimes?.[key]?.adhan && !draft.manualTimes?.[key]?.iqamah}
+                          title='Reset to calculated'
+                          className={`p-1 rounded transition-colors disabled:opacity-25 ${d ? 'text-[#7ba8ac] hover:text-[#f0ebe0]' : 'text-[#5a8a8e] hover:text-[#1a3035]'}`}
+                        >
+                          <IconX size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </SectionCard>
+
                 <SectionCard title="Iqamah Offsets" isDark={d}>
                   <p className={`text-xs mb-3 -mt-1 ${mutedText}`}>Minutes after Adhan for each prayer</p>
                   <div className="grid grid-cols-2 gap-2">

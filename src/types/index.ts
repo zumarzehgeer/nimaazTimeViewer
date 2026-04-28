@@ -67,6 +67,11 @@ export interface IqamahOffsets {
   Isha: number
 }
 
+export interface ManualPrayerTime {
+  adhan?: string   // "HH:MM" 24h — overrides API time when set
+  iqamah?: string  // "HH:MM" 24h — overrides offset calculation when set
+}
+
 export type HadithCollection =
   | 'sahih-bukhari'
   | 'sahih-muslim'
@@ -137,6 +142,7 @@ export interface MosqueSettings {
   mosqueName: string
   location: LocationState | null
   iqamahOffsets: IqamahOffsets
+  manualTimes: Record<string, ManualPrayerTime>
   jumuahAdhan: string
   announcements: string[]
   methodId: number | null
@@ -200,6 +206,7 @@ export const DEFAULT_SETTINGS: MosqueSettings = {
     Maghrib: 5,
     Isha: 15,
   },
+  manualTimes: {},
   jumuahAdhan: '',
   announcements: [],
   methodId: null,

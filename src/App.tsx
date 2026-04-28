@@ -12,7 +12,7 @@ import { usePrayerCache } from './hooks/usePrayerCache';
 import { useNextHijriHoliday } from './hooks/useNextHijriHoliday';
 import { useHadith } from './hooks/useHadith';
 import { getTimeOfDay, BACKGROUNDS } from './hooks/useBackground';
-import type { PrayerEntry, LocationState, MosqueSettings } from './types';
+import type { PrayerEntry, LocationState, MosqueSettings, IqamahOffsets } from './types';
 import { PRAYER_KEYS } from './types';
 import type { PrayerTimesResult } from './services/aladhan';
 
@@ -34,23 +34,26 @@ const CONGREGATIONAL_KEYS = ['Fajr', 'Dhuhr', 'Jumuah', 'Asr', 'Maghrib', 'Isha'
 function buildPrayerList(data: PrayerTimesResult, settings: MosqueSettings): PrayerEntry[] {
   const list: PrayerEntry[] = PRAYER_KEYS
     .filter((key) => key !== 'Imsak' && data.timings[key] !== undefined)
-    .map((key) => ({
-      name: DISPLAY_NAMES[key] ?? key,
-      key,
-      time: data.timings[key],
-      iqamahTime:
-        key !== 'Sunrise' && key in settings.iqamahOffsets
-          ? addIqamahTime(data.timings[key], settings.iqamahOffsets[key as keyof typeof settings.iqamahOffsets])
-          : null,
-    }));
+    .map((key) => {
+      const manual = settings.manualTimes?.[key];
+      const adhanTime = manual?.adhan || data.timings[key];
+      const iqamahTime = manual?.iqamah
+        ?? (key !== 'Sunrise' && key in settings.iqamahOffsets
+          ? addIqamahTime(adhanTime, settings.iqamahOffsets[key as keyof IqamahOffsets])
+          : null);
+      return { name: DISPLAY_NAMES[key] ?? key, key, time: adhanTime, iqamahTime };
+    });
   const dhuhrIndex = list.findIndex((p) => p.key === 'Dhuhr');
   if (dhuhrIndex !== -1) {
-    const jumuahAdhan = settings.jumuahAdhan || list[dhuhrIndex].time;
+    const jumuahManual = settings.manualTimes?.['Jumuah'];
+    const jumuahAdhan = jumuahManual?.adhan || settings.jumuahAdhan || list[dhuhrIndex].time;
+    const jumuahIqamah = jumuahManual?.iqamah
+      ?? addIqamahTime(jumuahAdhan, settings.iqamahOffsets.Jumuah);
     list.splice(dhuhrIndex + 1, 0, {
       name: "Jumu'ah",
       key: 'Jumuah',
       time: jumuahAdhan,
-      iqamahTime: addIqamahTime(jumuahAdhan, settings.iqamahOffsets.Jumuah),
+      iqamahTime: jumuahIqamah,
     });
   }
   return list;
