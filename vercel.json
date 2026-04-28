@@ -1,6 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/hadith-api/:path*", "destination": "/api/hadith-api/:path*" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ]
-}

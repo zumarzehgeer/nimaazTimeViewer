@@ -1,9 +1,9 @@
 import type { DisplayHadith, HadithCollection } from '../types'
 import { COLLECTION_COUNTS, COLLECTION_LABELS } from '../types'
 
-// Always use /hadith-api — Vite proxies it in dev, Firebase Hosting routes it
-// to the hadithProxy Cloud Function in production (avoids CORS on hadithapi.com).
-const BASE_URL = '/hadith-api'
+// Server-side proxy — Vite proxies in dev, Vercel serverless function in prod.
+// Avoids CORS (hadithapi.com doesn't support it).
+const BASE_URL = '/api/hadith'
 
 /**
  * Compute which rotation slot we're in based on the current time and interval.
@@ -41,7 +41,7 @@ export async function fetchHadith(
   hadithNumber: number,
   apiKey: string,
 ): Promise<DisplayHadith> {
-  const url = `${BASE_URL}/hadiths/?apiKey=${apiKey}&book=${collection}&hadithNumber=${hadithNumber}&paginate=1`
+  const url = `${BASE_URL}?apiKey=${apiKey}&book=${collection}&hadithNumber=${hadithNumber}&paginate=1`
   const res = await fetch(url)
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()

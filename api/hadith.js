@@ -1,14 +1,8 @@
 const https = require('https')
 
 module.exports = (req, res) => {
-  const segments = Array.isArray(req.query.path)
-    ? req.query.path
-    : [req.query.path].filter(Boolean)
-  const apiPath = '/' + segments.join('/')
-
-  const target = new URL('https://hadithapi.com/public/api' + apiPath)
+  const target = new URL('https://hadithapi.com/public/api/hadiths/')
   for (const [k, v] of Object.entries(req.query)) {
-    if (k === 'path') continue
     target.searchParams.set(k, String(v))
   }
 

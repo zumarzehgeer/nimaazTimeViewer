@@ -36,10 +36,10 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      '/hadith-api': {
+      '/api/hadith': {
         target: 'https://hadithapi.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/hadith-api/, '/public/api'),
+        rewrite: (path) => path.replace(/^\/api\/hadith/, '/public/api/hadiths/'),
       },
     },
   },
