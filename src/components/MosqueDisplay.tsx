@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import type { ReactNode } from 'react';
 import { IconMapPin, IconSun, IconMoon } from '@tabler/icons-react';
 import { PrayerColumn } from './PrayerColumn';
 import { AnnouncementTicker } from './AnnouncementTicker';
@@ -7,6 +8,7 @@ import { HadithCard } from './HadithCard';
 import type { PrayerEntry, HijriDate, MosqueSettings, NextHijriHoliday, DisplayHadith } from '../types';
 
 interface MosqueDisplayProps {
+  infoContent?: ReactNode;
   now: Date;
   prayers: PrayerEntry[];
   nextPrayer: PrayerEntry | null;
@@ -28,6 +30,7 @@ interface MosqueDisplayProps {
 }
 
 export function MosqueDisplay({
+  infoContent,
   now,
   prayers,
   nextPrayer,
@@ -124,8 +127,10 @@ export function MosqueDisplay({
               </div>
             </div>
 
-            {/* Daily hadith */}
-            {settings.hadith.enabled && (
+            {/* Optional display content; account mode retains the daily hadith. */}
+            {infoContent ? (
+              <div className='hidden lg:block w-full mt-6 lg:flex-1 lg:min-h-0'>{infoContent}</div>
+            ) : settings.hadith.enabled && (
               <div className='w-full mt-[clamp(0.75rem,1.5vw,2rem)] flex-1 h-0'>
                 <HadithCard
                   hadith={hadith}

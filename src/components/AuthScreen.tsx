@@ -143,6 +143,9 @@ export function AuthScreen() {
           <p className="text-sm text-gray-400 mt-1">
             {mode === 'signin' ? 'Sign in to your mosque account' : 'Create your mosque account'}
           </p>
+          <a href="?demo=1" className="inline-block mt-4 text-sm text-teal-300 underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">
+            Explore the guest demo
+          </a>
         </div>
 
         {/* Card */}
