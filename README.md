@@ -2,9 +2,17 @@
 
 A React and TypeScript prayer-time display for a mosque screen, with configurable adhan/iqamah times, a next-prayer countdown, announcements and account-synced settings.
 
-**[Hosted application](https://nimaaz-time-viewer.vercel.app)** · [Code tour](#code-tour) · [Run locally](#run-locally) · [Current limitations](#current-limitations)
+**[Guest demo](https://nimaaz-time-viewer.vercel.app/?demo=1)** · [Account application](https://nimaaz-time-viewer.vercel.app) · [Code tour](#code-tour) · [Run locally](#run-locally)
 
-The current application requires a Firebase account sign-in. A guest demonstration and screenshots of synthetic data are planned; reviewers do not need to create an account to read the architecture and setup below.
+The guest demo uses synthetic prayer times and an example clock. It needs no account, Firebase configuration or prayer-provider connection. Switch between weekday, Friday and overnight scenarios; try the theme toggle or change the sample display name and iqamah offset. Changes remain in memory and reset on reload. The account application still requires sign-in.
+
+The demo link requires deployment of this branch; the existing production deployment will not gain demo mode until the change is merged and deployed.
+
+![Nimaaz guest demo on desktop](docs/nimaaz-guest-desktop.png)
+
+## Try the guest demo locally
+
+With Node 24, run `npm ci` and `npm run dev`, then open the URL printed by Vite with `?demo=1` appended. No `.env` file is needed for the demo. Account mode needs the Firebase setup below.
 
 ## Features in the implementation
 
@@ -17,7 +25,7 @@ The current application requires a Firebase account sign-in. A guest demonstrati
 - Browser-local settings, Firestore IndexedDB persistence and cached monthly prayer calendars.
 - PWA manifest and service-worker caching of the application shell.
 
-These describe the current source; they are not claims of production usage or completed automated coverage.
+The display and demo share prayer-list, Friday-selection and countdown calculations. Account-backed features require a configured development project.
 
 ## Stack
 
@@ -83,6 +91,8 @@ Hadith content is optional and configured in application settings. Its current A
 | Entry point | Responsibility |
 |---|---|
 | `src/App.tsx` | Auth/setup/display states, schedule composition and theme coordination |
+| `src/demo/DemoApp.tsx` | Isolated synthetic demonstration and in-memory display controls |
+| `src/lib/prayers.ts`, `src/lib/countdown.ts` | Shared schedule rules and next-adhan calculation |
 | `src/components/MosqueDisplay.tsx` | Main display composition |
 | `src/components/SettingsModal.tsx` | Display and schedule configuration |
 | `src/components/AuthScreen.tsx` | Email/password account flows |
@@ -114,19 +124,23 @@ The browser also stores settings, theme and failed-month bookkeeping. Offline op
 
 ```bash
 npm run build
+npm test
+npx playwright install chromium
+npm run test:e2e
 npm run preview
 ```
 
-The build performs TypeScript checking and creates `dist/`. Preview serves the static build; it does not run the Vercel API function. The build workflow checks a clean dependency installation and production compilation. It does not test account access, Firestore rules, provider availability or the full user flow. No automated test script exists yet.
+The build performs TypeScript checking and creates `dist/`. Preview serves the static build; it does not run the Vercel API function. Node's test runner covers schedule boundaries and overrides. Playwright checks the built guest demo on desktop and mobile Chromium, including provider/account isolation, settings, reset, theme and keyboard focus. CI runs installation, unit tests, build and browser tests. It does not validate real account access, Firestore rules or live providers. See the dated [validation and dependency record](docs/VALIDATION.md).
 
 ## Current limitations
 
-- The display is gated by authentication; there is currently no isolated guest/demo mode.
+- Guest mode uses synthetic data and omits cloud synchronization and live optional content; account mode remains gated by authentication.
 - Firestore access rules and their tests are not versioned here.
 - Clock/countdown logic uses browser-local dates. Verify the display device's timezone matches the intended mosque schedule; selecting a remote location alone does not establish timezone correctness.
 - Offline fallback can reuse stale calendar data, including previous-year data when available. Treat this as approximate fallback behavior and confirm schedules against local mosque guidance.
 - Public APIs, fonts and optional content depend on network access and provider availability. Cached assets do not guarantee complete offline operation.
-- Automated coverage for schedule boundaries, Friday selection, overnight countdowns and settings synchronization remains follow-up work.
+- Automated coverage for real account settings synchronization and Firestore authorization remains follow-up work.
+- Dependency patches removed the two critical audit findings and reduced the total from 24 to 10. Firebase's transitive gRPC and PWA build dependencies still have findings; see the validation record. This is not a claim of zero known vulnerabilities.
 
 ## Attribution
 

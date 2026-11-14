@@ -35,3 +35,7 @@ Thumbs.db
 
 # Vite
 .vite/
+
+# Browser test artifacts
+test-results/
+playwright-report/
