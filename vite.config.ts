@@ -12,6 +12,9 @@ export default defineConfig({
       manifest: false,
       includeAssets: ['icons/*.png', 'icons/*.svg'],
       workbox: {
+        // Manual account-only registration still needs the original auto-update behavior.
+        skipWaiting: true,
+        clientsClaim: true,
         // Pre-cache everything Vite builds
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [

@@ -130,7 +130,7 @@ npm run test:e2e
 npm run preview
 ```
 
-The build performs TypeScript checking and creates `dist/`. Preview serves the static build; it does not run the Vercel API function. Node's test runner covers schedule boundaries and overrides. Playwright checks the built guest demo on desktop and mobile Chromium, including provider/account isolation, settings, reset, theme and keyboard focus. CI runs installation, unit tests, build and browser tests. It does not validate real account access, Firestore rules or live providers. See the dated [validation and dependency record](docs/VALIDATION.md).
+The build performs TypeScript checking and creates `dist/`. Preview serves the static build; it does not run the Vercel API function. Node's test runner covers schedule boundaries and overrides. The browser-test command first creates a test-only build with synthetic Firebase configuration, then runs six desktop/mobile Chromium cases: isolated guest behavior, controls/focus, and configured sign-in-shell caching with offline navigation into guest mode. Firebase/provider requests are blocked in the account-shell test; no credentials are entered. CI separately builds without Firebase configuration before these browser checks. These tests do not validate real authentication, Firestore rules/synchronization or live providers. See the dated [validation and dependency record](docs/VALIDATION.md).
 
 ## Current limitations
 
