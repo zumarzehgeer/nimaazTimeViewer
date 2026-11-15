@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
   signInWithEmailAndPassword,
   signOut,
 } from 'firebase/auth'
-import { doc, setDoc } from 'firebase/firestore'
+import { doc, writeBatch } from 'firebase/firestore'
 import { IconEye, IconEyeOff } from '@tabler/icons-react'
 import { auth, db } from '../firebase'
 import { LocationSearch } from './LocationSearch'
@@ -23,13 +24,15 @@ const AUTH_ERRORS: Record<string, string> = {
   'auth/invalid-email': 'Please enter a valid email address.',
   'auth/network-request-failed': 'No internet connection. Please try again when online.',
   'auth/too-many-requests': 'Too many attempts. Please try again later.',
+  'setup/rolled-back': 'Setup could not be saved. No account was kept; please try again.',
+  'setup/account-retained': 'Setup could not be confirmed. Your account may exist; sign in with this email instead of creating it again.',
 }
 
 function getErrorMessage(code: string): string {
   return AUTH_ERRORS[code] ?? 'Something went wrong. Please try again.'
 }
 
-export function AuthScreen() {
+export function AuthScreen({ onSignupPendingChange }: { onSignupPendingChange: (pending: boolean) => void }) {
   const [mode, setMode] = useState<Mode>('signin')
 
   // Sign-in fields
@@ -89,6 +92,7 @@ export function AuthScreen() {
     }
 
     setLoading(true)
+    onSignupPendingChange(true)
     try {
       const credential = await createUserWithEmailAndPassword(auth, email.trim(), password)
       const { uid } = credential.user
@@ -108,29 +112,34 @@ export function AuthScreen() {
         location,
       }
 
-      // Write to localStorage immediately so useSettings has the right data
-      // before onAuthStateChanged fires and triggers the main app render
-      localStorage.setItem(settingsStorageKey(uid), JSON.stringify(initialSettings))
-
-      // Write profile and settings to Firestore in parallel.
-      // If this fails, sign the user back out so they aren't left in a
-      // half-created state (auth account exists but no Firestore record).
+      // Firestore commits both documents or neither. Keep the signup screen
+      // mounted until setup finishes, even though Auth has already signed in.
       try {
-        await Promise.all([
-          setDoc(doc(db, 'users', uid, 'profile', 'info'), profile),
-          setDoc(doc(db, 'users', uid, 'config', 'mosque'), initialSettings),
-        ])
+        const batch = writeBatch(db)
+        batch.set(doc(db, 'users', uid, 'profile', 'info'), profile)
+        batch.set(doc(db, 'users', uid, 'config', 'mosque'), initialSettings)
+        await batch.commit()
       } catch (firestoreErr: unknown) {
-        localStorage.removeItem(settingsStorageKey(uid))
+        try { localStorage.removeItem(settingsStorageKey(uid)) } catch { /* optional local cache */ }
+        const code = (firestoreErr as { code?: string }).code ?? ''
+        let rolledBack = false
+        // Only a definitive rejection permits deleting this newly created user.
+        // A lost acknowledgment must not delete an account whose batch may exist.
+        if (['permission-denied', 'unauthenticated', 'invalid-argument'].includes(code)) {
+          try { await deleteUser(credential.user); rolledBack = true } catch { /* retain a recoverable account */ }
+        }
         await signOut(auth)
-        throw firestoreErr
+        throw { code: rolledBack ? 'setup/rolled-back' : 'setup/account-retained' }
       }
-      // onAuthStateChanged will now fire and App.tsx will render the main view
+      // Local cache is optional; a successful cloud setup must not be rolled back
+      // just because browser storage is full or disabled.
+      try { localStorage.setItem(settingsStorageKey(uid), JSON.stringify(initialSettings)) } catch { /* cloud is authoritative */ }
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? ''
       setError(getErrorMessage(code))
     } finally {
       setLoading(false)
+      onSignupPendingChange(false)
     }
   }
 
@@ -263,14 +272,14 @@ export function AuthScreen() {
             {mode === 'signin' ? (
               <>
                 New mosque?{' '}
-                <button onClick={handleToggleMode} className="text-indigo-600 font-semibold hover:underline">
+                <button disabled={loading} onClick={handleToggleMode} className="text-indigo-600 font-semibold hover:underline">
                   Create account
                 </button>
               </>
             ) : (
               <>
                 Already have an account?{' '}
-                <button onClick={handleToggleMode} className="text-indigo-600 font-semibold hover:underline">
+                <button disabled={loading} onClick={handleToggleMode} className="text-indigo-600 font-semibold hover:underline">
                   Sign in
                 </button>
               </>
