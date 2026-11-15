@@ -86,6 +86,12 @@ Missing `VITE_FIREBASE_API_KEY` causes the application to stop at runtime with a
 
 Hadith content is optional and configured in application settings. Its current API key is supplied by the browser to `/api/hadith`; do not use a privileged credential. The Vite development proxy handles that endpoint locally. In production, `api/hadith.js` supplies the Vercel function; a static host must provide an equivalent endpoint for that feature.
 
+### Cloudflare guest preview
+
+`wrangler.jsonc` points Cloudflare Workers Builds at the generated `dist/` assets. The configured branch command, `npx wrangler versions upload`, uploads a preview version; it does not replace the existing Vercel account application. Open the preview with `?demo=1` to use the synthetic guest experience without Firebase configuration.
+
+This Cloudflare target serves static assets only. It does not run the Vercel `api/hadith.js` function, and the current Cloudflare build has no Firebase variables. Account mode is therefore not an evaluation path on that preview. The existing Vercel URL remains the account application. Provisioning equivalent API routing and build configuration is separate work before using Cloudflare for account mode.
+
 ## Code tour
 
 | Entry point | Responsibility |

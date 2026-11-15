@@ -39,3 +39,7 @@ Thumbs.db
 # Browser test artifacts
 test-results/
 playwright-report/
+
+# Cloudflare local artifacts
+.wrangler/
+.wrangler-dry-run/
