@@ -5,7 +5,7 @@ Local verification used Windows, Node 24.18.0 and a production Vite build withou
 | Check | Result |
 |---|---|
 | Schedule unit tests | 14 passed |
-| Desktop/mobile Chromium demo regressions | 4 passed |
+| Desktop/mobile Chromium guest and sign-in-shell regressions | 6 passed |
 | TypeScript and production build | Passed |
 | Manual desktop and 390×844 inspection | Passed; screenshots use synthetic data |
 
@@ -32,3 +32,11 @@ Audit counts at verification:
 The critical protobufjs and websocket-driver findings are resolved in the lockfile. Remaining findings include Firebase/Firestore's pinned gRPC dependency (four high affected-package entries) and PWA build dependencies (glob/minimatch and deepmerge chains). Counts include parent packages affected by the same underlying advisory, not ten independent exploits. npm proposes older Firebase/PWA versions as force fixes; those were not applied because they need a separate compatibility assessment. This browser application uses Firebase's browser entry points, but that alone does not justify marking the whole dependency tree clean.
 
 A follow-up should evaluate supported upstream releases or a narrowly scoped override with account/emulator coverage, then repeat `npm audit`, `npm ci`, build and both test suites. Firestore rules are still not versioned or emulator-tested here.
+
+## Release review · 15 November 2026
+
+Added desktop/mobile checks for the configured sign-in shell, first service-worker activation, offline reload and offline navigation into the guest demo. The test build uses a fixed synthetic Firebase configuration; Firebase and provider destinations are blocked, and no credentials are entered. Firebase authentication/backend calls are monitored and none occur. The existing account shell attempts the next-Hijri-holiday provider request, which the test blocks; this is not part of the isolated guest's provider behavior.
+
+The new test exposed a registration regression: `injectRegister: false` prevents the PWA plugin from automatically selecting `skipWaiting`/`clientsClaim` from `registerType`. Explicit Workbox activation flags restore the intended account auto-update behavior. All 14 unit cases and six browser cases pass after the fix. This verifies installation and offline transitions, not an upgrade from every historical cached release, real sign-in, Firestore rules or synchronization.
+
+Candidate Firebase 12.19/PWA 2 upstream updates still reported the same ten affected-package entries. They were not retained without a demonstrated advisory reduction or account integration validation. The previously tested dependency set remains; no force downgrade or transitive override was introduced. Cloudflare deployment logs require a separate account sign-in and remain a release prerequisite.
