@@ -10,5 +10,6 @@ function run(args) {
   execFileSync(process.execPath, args, { stdio: 'inherit', env: process.env })
 }
 run(['--test', 'tests-emulator/firestore.test.mjs'])
+run(['--test', 'tests-emulator/deployed-rules.test.mjs'])
 run(['scripts/build-browser-test.mjs', '--emulators'])
 run(['node_modules/@playwright/test/cli.js', 'test', '--config', 'playwright.account.config.ts'])
