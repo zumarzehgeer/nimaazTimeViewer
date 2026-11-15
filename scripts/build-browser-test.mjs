@@ -9,6 +9,7 @@ const env = {
   VITE_FIREBASE_STORAGE_BUCKET: 'demo-nimaaz.invalid',
   VITE_FIREBASE_MESSAGING_SENDER_ID: '1234567890',
   VITE_FIREBASE_APP_ID: '1:1234567890:web:synthetic',
+  VITE_USE_FIREBASE_EMULATORS: process.argv.includes('--emulators') ? 'true' : 'false',
 }
 execFileSync(process.execPath, ['node_modules/typescript/bin/tsc'], { env, stdio: 'inherit' })
 execFileSync(process.execPath, ['node_modules/vite/bin/vite.js', 'build'], { env, stdio: 'inherit' })
