@@ -133,6 +133,7 @@ npm run build
 npm test
 npx playwright install chromium
 npm run test:e2e
+npm run test:upgrade
 npm run preview
 ```
 
@@ -141,11 +142,11 @@ The build performs TypeScript checking and creates `dist/`. Preview serves the s
 ## Current limitations
 
 - Guest mode uses synthetic data and omits cloud synchronization and live optional content; account mode remains gated by authentication.
-- Proposed Firestore rules and local emulator tests are versioned; parity with the existing live project has not been established, and they are not deployed by this work.
+- Proposed Firestore rules and local emulator tests are versioned. The [readiness record](docs/RELEASE-READINESS.md) compares their ownership boundary with observed deployed rules; the stricter candidate is not deployed by this work.
 - Clock/countdown logic uses browser-local dates. Verify the display device's timezone matches the intended mosque schedule; selecting a remote location alone does not establish timezone correctness.
 - Offline fallback can reuse stale calendar data, including previous-year data when available. Treat this as approximate fallback behavior and confirm schedules against local mosque guidance.
 - Public APIs, fonts and optional content depend on network access and provider availability. Cached assets do not guarantee complete offline operation.
-- Hosted Firebase behavior and historical service-worker upgrades remain unvalidated; emulator coverage is not production parity.
+- Hosted Firebase operations and every historical worker remain unvalidated. A reconstructed prior-registration upgrade and signup rollback/retry are tested; emulator coverage is not full production parity.
 - Dependency patches and scoped overrides reduce the audit from 24 affected-package entries to four low entries. None are currently moderate, high or critical. PWA build dependencies still have low findings; see the validation record. This is not a claim of zero known vulnerabilities.
 
 ## Attribution

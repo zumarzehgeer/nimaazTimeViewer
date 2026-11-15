@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "node --test tests-unit/*.test.mts",
     "test:e2e": "node scripts/build-browser-test.mjs && playwright test",
-    "test:emulators": "npx --yes firebase-tools@15.36.0 emulators:exec --project demo-nimaaz --config firebase.emulators.json --only auth,firestore \"node scripts/run-account-tests.mjs\""
+    "test:emulators": "npx --yes firebase-tools@15.36.0 emulators:exec --project demo-nimaaz --config firebase.emulators.json --only auth,firestore \"node scripts/run-account-tests.mjs\"",
+    "test:upgrade": "node scripts/build-upgrade-test.mjs && playwright test --config playwright.upgrade.config.ts"
   },
   "dependencies": {
     "@tabler/icons-react": "^3.41.1",
