@@ -1,9 +1,10 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
+import { connectAuthEmulator, getAuth } from 'firebase/auth'
 import {
   initializeFirestore,
   persistentLocalCache,
   persistentMultipleTabManager,
+  connectFirestoreEmulator,
 } from 'firebase/firestore'
 
 if (!import.meta.env.VITE_FIREBASE_API_KEY) {
@@ -30,3 +31,12 @@ export const db = initializeFirestore(app, {
     tabManager: persistentMultipleTabManager(),
   }),
 })
+
+// Explicit test-only opt-in. Never connect a real project or remote page to emulators.
+if (import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true') {
+  if (!firebaseConfig.projectId?.startsWith('demo-') || !['localhost', '127.0.0.1'].includes(location.hostname)) {
+    throw new Error('Firebase emulators require a demo project on loopback.')
+  }
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
+  connectFirestoreEmulator(db, '127.0.0.1', 8080)
+}
