@@ -18,7 +18,9 @@ import { buildPrayerList, filterCongregational } from './lib/prayers';
 export default function App() {
   const now = useClock();
   const { user, authLoading, signOut } = useAuth();
-  const { settings, setSettings } = useSettings(user?.uid ?? null);
+  const [signupPending, setSignupPending] = useState(false);
+  const accountUid = signupPending ? null : user?.uid ?? null;
+  const { settings, setSettings } = useSettings(accountUid);
   const [showSettings, setShowSettings] = useState(false);
   const [isDark, setIsDark] = useState<boolean>(() => {
     try { return localStorage.getItem('nimaaz-theme') !== 'light' } catch { return true }
@@ -54,7 +56,7 @@ export default function App() {
   }, [date]);
 
   const { getTimingsForDate, syncing, syncProgress, syncTotal } = usePrayerCache(
-    user?.uid ?? null,
+    accountUid,
     settings.location,
     settings.methodId,
   );
@@ -131,8 +133,8 @@ export default function App() {
     );
   }
 
-  if (!user) {
-    return <AuthScreen />;
+  if (!user || signupPending) {
+    return <AuthScreen onSignupPendingChange={setSignupPending} />;
   }
 
   // First-time setup: no location configured
