@@ -2,11 +2,11 @@
 
 A React and TypeScript prayer-time display for a mosque screen, with configurable adhan/iqamah times, a next-prayer countdown, announcements and account-synced settings.
 
-**[Try the guest demo locally](#try-the-guest-demo-locally)** · [Account application](https://nimaaz-time-viewer.vercel.app) · [Code tour](#code-tour) · [Run locally](#run-locally)
+**[Try the synthetic guest preview](https://345d403b-nimaaztimeviewer.zumarzehgeer007.workers.dev/?demo=1)** · [Local guest setup](#try-the-guest-demo-locally) · [Account application](https://nimaaz-time-viewer.vercel.app) · [Code tour](#code-tour)
 
 The guest demo uses synthetic prayer times and an example clock. It needs no account, Firebase configuration or prayer-provider connection. Switch between weekday, Friday and overnight scenarios; try the theme toggle or change the sample display name and iqamah offset. Changes remain in memory and reset on reload. The account application still requires sign-in.
 
-Guest mode is available on this review branch. The existing production deployment will not gain it until the change is merged and deployed; use the local setup below to evaluate it without an account.
+Guest mode is available on this review branch and the static version preview linked above. That preview supports guest mode only; its account sign-in link is unsupported. The existing Vercel account application has not been replaced.
 
 ![Nimaaz guest demo on desktop](docs/nimaaz-guest-desktop.png)
 
@@ -66,7 +66,7 @@ Open the URL printed by Vite. On Windows, use `npm.cmd` if PowerShell execution 
 
 1. Register a web app in your development Firebase project and populate all six `VITE_FIREBASE_*` values from its configuration.
 2. Enable email/password sign-in in Firebase Authentication and authorize the development hostname if required.
-3. Create a Cloud Firestore database. Configure rules so authenticated users can access only documents belonging to their own UID, covering the paths below. This repository currently does not include deployable Firestore rules or rule tests; review that configuration before using real data.
+3. Create a Cloud Firestore database. Review the proposed owner-only `firestore.rules` against your requirements and the paths below. Those rules are tested locally; they have not been read from or deployed to the existing live project. No production rule deployment is performed by the commands in this README.
 4. Start the app and use a disposable development account and synthetic mosque details. Choose a location and verify the display/settings in that isolated project.
 
 Firebase web-app configuration is embedded in the browser bundle; it is not a service-account credential or a substitute for Firestore rules. Never put Firebase Admin credentials or private service-account keys in `VITE_*` variables.
@@ -136,17 +136,17 @@ npm run test:e2e
 npm run preview
 ```
 
-The build performs TypeScript checking and creates `dist/`. Preview serves the static build; it does not run the Vercel API function. Node's test runner covers schedule boundaries and overrides. The browser-test command first creates a test-only build with synthetic Firebase configuration, then runs six desktop/mobile Chromium cases: isolated guest behavior, controls/focus, and configured sign-in-shell caching with offline navigation into guest mode. Firebase/provider requests are blocked in the account-shell test; no credentials are entered. CI separately builds without Firebase configuration before these browser checks. These tests do not validate real authentication, Firestore rules/synchronization or live providers. See the dated [validation and dependency record](docs/VALIDATION.md).
+The build performs TypeScript checking and creates `dist/`. Preview serves the static build; it does not run the Vercel API function. Node's test runner covers schedule boundaries and overrides. The browser-test command first creates a test-only build with synthetic Firebase configuration, then runs six desktop/mobile Chromium cases: isolated guest behavior, controls/focus, and configured sign-in-shell caching with offline navigation into guest mode. Firebase/provider requests are blocked in the account-shell test; no credentials are entered. CI separately builds without Firebase configuration before these browser checks. The separate [local account suite](docs/ACCOUNT-VALIDATION.md) uses official Auth/Firestore emulators for owner-only rules and account behavior, with synthetic/blocked providers. See the dated [validation and dependency record](docs/VALIDATION.md).
 
 ## Current limitations
 
 - Guest mode uses synthetic data and omits cloud synchronization and live optional content; account mode remains gated by authentication.
-- Firestore access rules and their tests are not versioned here.
+- Proposed Firestore rules and local emulator tests are versioned; parity with the existing live project has not been established, and they are not deployed by this work.
 - Clock/countdown logic uses browser-local dates. Verify the display device's timezone matches the intended mosque schedule; selecting a remote location alone does not establish timezone correctness.
 - Offline fallback can reuse stale calendar data, including previous-year data when available. Treat this as approximate fallback behavior and confirm schedules against local mosque guidance.
 - Public APIs, fonts and optional content depend on network access and provider availability. Cached assets do not guarantee complete offline operation.
-- Automated coverage for real account settings synchronization and Firestore authorization remains follow-up work.
-- Dependency patches removed the two critical audit findings and reduced the total from 24 to 10. Firebase's transitive gRPC and PWA build dependencies still have findings; see the validation record. This is not a claim of zero known vulnerabilities.
+- Hosted Firebase behavior and historical service-worker upgrades remain unvalidated; emulator coverage is not production parity.
+- Dependency patches and scoped overrides reduce the audit from 24 affected-package entries to four low entries. None are currently moderate, high or critical. PWA build dependencies still have low findings; see the validation record. This is not a claim of zero known vulnerabilities.
 
 ## Attribution
 
