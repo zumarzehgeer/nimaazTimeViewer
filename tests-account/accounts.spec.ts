@@ -3,6 +3,8 @@ import { initializeApp, deleteApp, type FirebaseApp } from 'firebase/app'
 import { getAuth, connectAuthEmulator, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'
 import { getFirestore, connectFirestoreEmulator, doc, setDoc, getDocFromServer, terminate } from 'firebase/firestore'
 import { DEFAULT_SETTINGS } from '../src/types/index'
+import { initializeTestEnvironment } from '@firebase/rules-unit-testing'
+import { readFile } from 'node:fs/promises'
 
 const password = 'synthetic-test-only-123!'
 const clients: { app: FirebaseApp; uid: string; email: string; db: ReturnType<typeof getFirestore> }[] = []
@@ -114,4 +116,44 @@ test('sign-up persists a profile and settings under the new authenticated UID', 
   // Auth resolves before the asynchronous profile/config writes finish.
   await expect.poll(async () => (await getDocFromServer(doc(clients[1].db, 'users', user.uid, 'profile', 'info'))).data()).toMatchObject({ uid: user.uid, email, mosqueName: 'Synthetic signup mosque' })
   await expect.poll(async () => (await getDocFromServer(doc(clients[1].db, 'users', user.uid, 'config', 'mosque'))).data()).toMatchObject({ mosqueName: 'Synthetic signup mosque', location: { lat: 1, lng: 1 } })
+})
+
+test('a denied signup batch leaves no partial settings and can retry the same email', async ({ page, context }) => {
+  const rules = await readFile('firestore.rules', 'utf8')
+  const loadRules = (text: string) => initializeTestEnvironment({
+    projectId: 'demo-nimaaz', firestore: { host: '127.0.0.1', port: 8080, rules: text },
+  })
+  // Only the local emulator changes rules. Deny one of the two signup documents.
+  const denied = await loadRules(rules.replace('allow create, update: if owns(uid) && request.resource.data.uid == uid;', 'allow create, update: if false;'))
+  const email = `retry-${Date.now()}@example.invalid`
+  try {
+    await providers(context)
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Create account', exact: true }).click()
+    await page.getByPlaceholder('e.g. Masjid Al-Nur').fill('Retry signup mosque')
+    await page.getByPlaceholder('Search city...').fill('Synthetic')
+    await page.getByText('Synthetic City, Example', { exact: true }).click()
+    await page.getByPlaceholder('admin@mosque.com').fill(email)
+    await page.getByPlaceholder('At least 6 characters').fill(password)
+    await page.getByRole('button', { name: 'Create Account', exact: true }).click()
+    await expect(page.getByText('Setup could not be saved. No account was kept; please try again.', { exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Create Account', exact: true })).toBeEnabled()
+    // Rules-disabled inspection verifies both documents were absent after rollback.
+    await denied.withSecurityRulesDisabled(async ctx => {
+      const { getDocs, collectionGroup } = await import('firebase/firestore')
+      const profiles = await getDocs(collectionGroup(ctx.firestore(), 'profile'))
+      expect(profiles.docs.some(d => d.data().email === email)).toBe(false)
+      const configs = await getDocs(collectionGroup(ctx.firestore(), 'config'))
+      expect(configs.docs.some(d => d.data().mosqueName === 'Retry signup mosque')).toBe(false)
+    })
+    const restored = await loadRules(rules)
+    await restored.cleanup()
+    // The form stays mounted; its values survive and creation can be retried.
+    await page.getByRole('button', { name: 'Create Account', exact: true }).click()
+    await expect(page.getByText('Retry signup mosque', { exact: true })).toBeVisible()
+  } finally {
+    const restored = await loadRules(rules)
+    await restored.cleanup()
+    await denied.cleanup()
+  }
 })
