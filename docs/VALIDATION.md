@@ -50,3 +50,11 @@ Added proposed owner-only Firestore rules and a demo-only emulator runner. Six r
 The first account run reproduced two failures: B inherited A's in-memory settings after sign-out, and an unowned legacy browser setting could be copied into B's missing Firestore configuration. UID-scoped local storage, owner-tagged snapshots/state, cancellation of pending account writes and removal of automatic legacy imports fix both regressions. The final emulator run passes all nine cases. The signup test waits for asynchronous profile/config writes rather than assuming the authenticated display means those writes have completed.
 
 No live project rules or data were read/changed. The proposed rules have not been deployed or compared with existing live rules. Hosted account behavior, partial signup failure recovery, historical service-worker upgrades and live providers still need separate validation. CLI/emulator tooling is installed separately from the application's audited lockfile.
+
+## Readiness follow-up · 15 November 2026
+
+Read the existing project's published owner-only Firestore rules through the signed-in console, without changing them or opening account documents. A dated fixture and three comparison cases verify the shared ownership boundary and the candidate's intentionally stricter paths/UID/month checks. This supersedes the prior "rules not compared" limitation; the candidate is still not deployed.
+
+Added a signup rejection regression that failed before the fix and now verifies atomic profile/config writes, a retained form/error, rollback of the newly created Auth account after definitive rejection and same-email retry. The account suite has four browser cases. Added a separate reconstructed-baseline worker update test with two open tabs and offline guest navigation; it passes. The existing six guest/shell browser cases and 14 unit cases pass, as does production compilation. There are now nine rule/comparison cases and eleven browser cases in total.
+
+The existing Vercel account URL loads its sign-in shell without entering credentials. This is a page-availability check. See [RELEASE-READINESS.md](RELEASE-READINESS.md) for signup/worker-test boundaries and the separate production-rollout decision. The audit remains four low affected-package entries, with no moderate/high/critical.
