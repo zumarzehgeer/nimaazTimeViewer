@@ -10,6 +10,7 @@ import { auth, db } from '../firebase'
 import { LocationSearch } from './LocationSearch'
 import type { LocationState, UserProfile, MosqueSettings } from '../types'
 import { DEFAULT_SETTINGS } from '../types'
+import { settingsStorageKey } from '../hooks/useSettings'
 
 type Mode = 'signin' | 'signup'
 
@@ -109,7 +110,7 @@ export function AuthScreen() {
 
       // Write to localStorage immediately so useSettings has the right data
       // before onAuthStateChanged fires and triggers the main app render
-      localStorage.setItem('nimaaz-settings', JSON.stringify(initialSettings))
+      localStorage.setItem(settingsStorageKey(uid), JSON.stringify(initialSettings))
 
       // Write profile and settings to Firestore in parallel.
       // If this fails, sign the user back out so they aren't left in a
@@ -120,7 +121,7 @@ export function AuthScreen() {
           setDoc(doc(db, 'users', uid, 'config', 'mosque'), initialSettings),
         ])
       } catch (firestoreErr: unknown) {
-        localStorage.removeItem('nimaaz-settings')
+        localStorage.removeItem(settingsStorageKey(uid))
         await signOut(auth)
         throw firestoreErr
       }
