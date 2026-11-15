@@ -1,10 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { doc, onSnapshot, setDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import type { MosqueSettings } from '../types'
 import { DEFAULT_SETTINGS } from '../types'
-
-const STORAGE_KEY = 'nimaaz-settings'
 
 export function mergeWithDefaults(data: Partial<MosqueSettings>): MosqueSettings {
   return {
@@ -19,48 +17,28 @@ function getConfigRef(uid: string) {
   return doc(db, 'users', uid, 'config', 'mosque')
 }
 
-function loadFromLocalStorage(): MosqueSettings | null {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (!stored) return null
-    return mergeWithDefaults(JSON.parse(stored))
-  } catch {
-    return null
-  }
-}
-
 interface UseFirestoreSettingsReturn {
   firestoreSettings: MosqueSettings | null
   saveToFirestore: (settings: MosqueSettings) => void
 }
 
 export function useFirestoreSettings(uid: string | null): UseFirestoreSettingsReturn {
-  const [firestoreSettings, setFirestoreSettings] = useState<MosqueSettings | null>(null)
-  const migratedRef = useRef(false)
+  const [snapshotState, setSnapshotState] = useState<{ uid: string; settings: MosqueSettings } | null>(null)
 
   useEffect(() => {
-    if (!uid) {
-      setFirestoreSettings(null)
-      migratedRef.current = false
-      return
-    }
+    if (!uid) return
 
     const configRef = getConfigRef(uid)
-
+    let active = true
     const unsubscribe = onSnapshot(configRef, (snapshot) => {
+      if (!active) return
       if (snapshot.exists()) {
-        setFirestoreSettings(mergeWithDefaults(snapshot.data() as Partial<MosqueSettings>))
-        migratedRef.current = true
-      } else if (!migratedRef.current) {
-        migratedRef.current = true
-        const local = loadFromLocalStorage()
-        if (local !== null && local.location !== null) {
-          setDoc(configRef, local).catch(console.error)
-        }
+        setSnapshotState({ uid, settings: mergeWithDefaults(snapshot.data() as Partial<MosqueSettings>) })
       }
-    })
+    }, (error) => console.error('Could not load account settings', error))
 
-    return unsubscribe
+    // Never infer ownership of the legacy shared localStorage entry.
+    return () => { active = false; unsubscribe() }
   }, [uid])
 
   const saveToFirestore = useCallback(
@@ -71,5 +49,5 @@ export function useFirestoreSettings(uid: string | null): UseFirestoreSettingsRe
     [uid],
   )
 
-  return { firestoreSettings, saveToFirestore }
+  return { firestoreSettings: snapshotState?.uid === uid ? snapshotState.settings : null, saveToFirestore }
 }

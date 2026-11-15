@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth'
 import type { User } from 'firebase/auth'
 import { auth } from '../firebase'
+import { settingsStorageKey } from './useSettings'
 
 interface UseAuthReturn {
   user: User | null
@@ -25,6 +26,7 @@ export function useAuth(): UseAuthReturn {
   }, [])
 
   const signOut = async () => {
+    if (auth.currentUser) localStorage.removeItem(settingsStorageKey(auth.currentUser.uid))
     localStorage.removeItem('nimaaz-settings')
     await firebaseSignOut(auth)
   }
