@@ -2,11 +2,11 @@
 
 A React and TypeScript prayer-time display for a mosque screen, with configurable adhan/iqamah times, a next-prayer countdown, announcements and account-synced settings.
 
-**[Try the synthetic guest preview](https://345d403b-nimaaztimeviewer.zumarzehgeer007.workers.dev/?demo=1)** · [Local guest setup](#try-the-guest-demo-locally) · [Account application](https://nimaaz-time-viewer.vercel.app) · [Code tour](#code-tour)
+**[Try the synthetic guest demo](https://nimaaz-time-viewer.vercel.app/?demo=1)** · [Local guest setup](#try-the-guest-demo-locally) · [Account application](https://nimaaz-time-viewer.vercel.app) · [Code tour](#code-tour)
 
 The guest demo uses synthetic prayer times and an example clock. It needs no account, Firebase configuration or prayer-provider connection. Switch between weekday, Friday and overnight scenarios; try the theme toggle or change the sample display name and iqamah offset. Changes remain in memory and reset on reload. The account application still requires sign-in.
 
-Guest mode is available on this review branch and the static version preview linked above. That preview supports guest mode only; its account sign-in link is unsupported. The existing Vercel account application has not been replaced.
+Guest mode and the account application are available from the same Vercel deployment. The guest URL above opens synthetic data without an account; Account sign-in opens the separate authenticated flow. The implementation and its validation are merged into the default branch.
 
 ![Nimaaz guest demo on desktop](docs/nimaaz-guest-desktop.png)
 
