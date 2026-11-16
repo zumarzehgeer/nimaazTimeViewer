@@ -12,66 +12,15 @@ import { usePrayerCache } from './hooks/usePrayerCache';
 import { useNextHijriHoliday } from './hooks/useNextHijriHoliday';
 import { useHadith } from './hooks/useHadith';
 import { getTimeOfDay, BACKGROUNDS } from './hooks/useBackground';
-import type { PrayerEntry, LocationState, MosqueSettings, IqamahOffsets } from './types';
-import { PRAYER_KEYS } from './types';
-import type { PrayerTimesResult } from './services/aladhan';
-
-function addIqamahTime(adhanTime: string, offsetMinutes: number): string {
-  const clean = adhanTime.split(' ')[0];
-  const [h, m] = clean.split(':').map(Number);
-  const total = h * 60 + m + offsetMinutes;
-  const newH = Math.floor(total / 60) % 24;
-  const newM = total % 60;
-  return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
-}
-
-const DISPLAY_NAMES: Record<string, string> = {
-  Lastthird: 'Last Third',
-};
-
-const CONGREGATIONAL_KEYS = ['Fajr', 'Dhuhr', 'Jumuah', 'Asr', 'Maghrib', 'Isha'];
-
-function buildPrayerList(data: PrayerTimesResult, settings: MosqueSettings): PrayerEntry[] {
-  const list: PrayerEntry[] = PRAYER_KEYS
-    .filter((key) => key !== 'Imsak' && data.timings[key] !== undefined)
-    .map((key) => {
-      const manual = settings.manualTimes?.[key];
-      const adhanTime = manual?.adhan || data.timings[key];
-      const iqamahTime = manual?.iqamah
-        ?? (key !== 'Sunrise' && key in settings.iqamahOffsets
-          ? addIqamahTime(adhanTime, settings.iqamahOffsets[key as keyof IqamahOffsets])
-          : null);
-      return { name: DISPLAY_NAMES[key] ?? key, key, time: adhanTime, iqamahTime };
-    });
-  const dhuhrIndex = list.findIndex((p) => p.key === 'Dhuhr');
-  if (dhuhrIndex !== -1) {
-    const jumuahManual = settings.manualTimes?.['Jumuah'];
-    const jumuahAdhan = jumuahManual?.adhan || settings.jumuahAdhan || list[dhuhrIndex].time;
-    const jumuahIqamah = jumuahManual?.iqamah
-      ?? addIqamahTime(jumuahAdhan, settings.iqamahOffsets.Jumuah);
-    list.splice(dhuhrIndex + 1, 0, {
-      name: "Jumu'ah",
-      key: 'Jumuah',
-      time: jumuahAdhan,
-      iqamahTime: jumuahIqamah,
-    });
-  }
-  return list;
-}
-
-function filterCongregational(prayers: PrayerEntry[], isFriday: boolean): PrayerEntry[] {
-  return prayers.filter((p) => {
-    if (!CONGREGATIONAL_KEYS.includes(p.key)) return false;
-    if (p.key === 'Dhuhr' && isFriday) return false;
-    if (p.key === 'Jumuah' && !isFriday) return false;
-    return true;
-  });
-}
+import type { LocationState, MosqueSettings } from './types';
+import { buildPrayerList, filterCongregational } from './lib/prayers';
 
 export default function App() {
   const now = useClock();
   const { user, authLoading, signOut } = useAuth();
-  const { settings, setSettings } = useSettings(user?.uid ?? null);
+  const [signupPending, setSignupPending] = useState(false);
+  const accountUid = signupPending ? null : user?.uid ?? null;
+  const { settings, setSettings } = useSettings(accountUid);
   const [showSettings, setShowSettings] = useState(false);
   const [isDark, setIsDark] = useState<boolean>(() => {
     try { return localStorage.getItem('nimaaz-theme') !== 'light' } catch { return true }
@@ -107,7 +56,7 @@ export default function App() {
   }, [date]);
 
   const { getTimingsForDate, syncing, syncProgress, syncTotal } = usePrayerCache(
-    user?.uid ?? null,
+    accountUid,
     settings.location,
     settings.methodId,
   );
@@ -184,8 +133,8 @@ export default function App() {
     );
   }
 
-  if (!user) {
-    return <AuthScreen />;
+  if (!user || signupPending) {
+    return <AuthScreen onSignupPendingChange={setSignupPending} />;
   }
 
   // First-time setup: no location configured

@@ -35,3 +35,16 @@ Thumbs.db
 
 # Vite
 .vite/
+
+# Browser test artifacts
+test-results/
+playwright-report/
+
+# Cloudflare local artifacts
+.wrangler/
+.wrangler-dry-run/
+
+# Local Firebase test logs and audit snapshots
+*-debug.log
+audit-*.json
+.test-builds/

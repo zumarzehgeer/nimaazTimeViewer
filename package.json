@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test tests-unit/*.test.mts",
+    "test:e2e": "node scripts/build-browser-test.mjs && playwright test",
+    "test:emulators": "npx --yes firebase-tools@15.36.0 emulators:exec --project demo-nimaaz --config firebase.emulators.json --only auth,firestore \"node scripts/run-account-tests.mjs\"",
+    "test:upgrade": "node scripts/build-upgrade-test.mjs && playwright test --config playwright.upgrade.config.ts"
   },
   "dependencies": {
     "@tabler/icons-react": "^3.41.1",
@@ -16,14 +20,27 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "@playwright/test": "^1.56.0",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.1",
+    "@vitejs/plugin-react": "^5.2.0",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
     "typescript": "^5.5.3",
-    "vite": "^5.4.10",
+    "vite": "^7.3.8",
     "vite-plugin-pwa": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "overrides": {
+    "@firebase/firestore": {
+      "@grpc/grpc-js": "1.14.7"
+    },
+    "workbox-build": {
+      "glob": "14.0.6"
+    }
   }
 }
